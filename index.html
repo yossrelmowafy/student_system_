@@ -29,7 +29,7 @@
         <div class="flex justify-between items-center border-b pb-4 border-white/20 dark:border-slate-800/50">
             <div class="text-right">
                 <h2 class="text-2xl font-black text-blue-400 dark:text-blue-400 tracking-wider drop-shadow-md">مستر يسر الموافي</h2>
-                <p class="text-xs text-gray-200 dark:text-gray-300 font-bold mt-1 drop-shadow">نظام المحاسبة وإدارة الأعمال - نظام البكالوريا (دفعة 2027)[cite: 1]</p>
+                <p class="text-xs text-gray-200 dark:text-gray-300 font-bold mt-1 drop-shadow">نظام المحاسبة وإدارة الأعمال - نظام البكالوريا (دفعة 2027)</p>
             </div>
             <button onclick="playClickSound(); toggleDarkMode()" class="bg-black/30 dark:bg-slate-800/50 text-white p-2.5 rounded-2xl text-xl transition shadow hover:scale-105 border border-white/10" title="تبديل الوضع الليلي">
                 <span id="theme-icon">🌙</span>
@@ -57,6 +57,8 @@
     <script>
         const ADMIN_WHATSAPP = "201015706200";
 
+        let currentActiveMode = 'student'; // 'student' or 'admin'
+
         let students = JSON.parse(localStorage.getItem('yossr_students')) || [
             { name: "أحمد محمد علي", code: "YOSSR-101", phone: "01012345678", active: true }
         ];
@@ -76,8 +78,47 @@
         let isDarkMode = localStorage.getItem('yossr_dark_mode') === 'true';
         if (isDarkMode) { applyDarkMode(true); }
 
+        // المزامنة الفورية عند تغير التخزين المحلي من أي نافذة أو زر
+        window.addEventListener('storage', (e) => {
+            loadAllDataFromStorage();
+            refreshCurrentViewSilently();
+        });
+
+        // المزامنة الحية التلقائية كل ثانية لضمان ظهور الطلبات للمشرف فوراً
+        setInterval(() => {
+            loadAllDataFromStorage();
+            refreshCurrentViewSilently();
+        }, 1000);
+
+        function loadAllDataFromStorage() {
+            students = JSON.parse(localStorage.getItem('yossr_students')) || students;
+            pendingAttendance = JSON.parse(localStorage.getItem('yossr_pending_att')) || pendingAttendance;
+            approvedAttendance = JSON.parse(localStorage.getItem('yossr_approved_att')) || approvedAttendance;
+            pendingPayments = JSON.parse(localStorage.getItem('yossr_pending_pay')) || pendingPayments;
+            subscriptions = JSON.parse(localStorage.getItem('yossr_subscriptions')) || subscriptions;
+            studentDues = JSON.parse(localStorage.getItem('yossr_student_dues')) || studentDues;
+            expenses = JSON.parse(localStorage.getItem('yossr_expenses')) || expenses;
+            schedules = JSON.parse(localStorage.getItem('yossr_schedules')) || schedules;
+        }
+
+        function refreshCurrentViewSilently() {
+            if (currentActiveMode === 'admin') {
+                // تحديث صامت للوحة المشرف دون فقدان تركيز الحقول المكتوبة إن أمكن، أو إعادة العرض
+                const activeElId = document.activeElement ? document.activeElement.id : null;
+                renderAdminView();
+                if (activeElId && document.getElementById(activeElId)) {
+                    document.getElementById(activeElId).focus();
+                }
+            } else if (currentActiveMode === 'student') {
+                const codeInput = document.getElementById('portal-code-input');
+                if (codeInput && codeInput.value.trim() !== '') {
+                    updateStudentPendingView(codeInput.value.trim().toUpperCase());
+                }
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
-            renderStudentView();
+            switchMode('student');
             
             const urlParams = new URLSearchParams(window.location.search);
             const studentCodeFromURL = urlParams.get('code');
@@ -157,6 +198,7 @@
 
         function switchMode(mode) {
             stopStudentQrScanner();
+            currentActiveMode = mode;
             const studentBtn = document.getElementById('btn-mode-student');
             const adminBtn = document.getElementById('btn-mode-admin');
 
@@ -404,6 +446,7 @@
         function updateStudentPendingView(code) {
             const box = document.getElementById('student-pending-status-box');
             if(!box) return;
+            loadAllDataFromStorage();
             let pendingAttObj = pendingAttendance.find(a => a.code.toUpperCase() === code.toUpperCase());
             let pendingPayList = pendingPayments.filter(p => p.code.toUpperCase() === code.toUpperCase());
 
@@ -425,11 +468,11 @@
         }
 
         function requestAttendanceAuto(code) {
+            loadAllDataFromStorage();
             let student = students.find(s => s.code.toUpperCase() === code);
             if (!student) {
                 student = { name: "طالب بالكارت (" + code + ")", code: code, phone: "غير محدد", active: true };
                 students.push(student);
-                saveLocal();
             }
 
             const todayStr = new Date().toLocaleDateString('ar-EG');
@@ -450,7 +493,7 @@
             saveLocal();
             
             if(alertBox) {
-                alertBox.innerHTML = `<div class="p-2.5 bg-emerald-950 text-emerald-200 border border-emerald-500 rounded-xl text-xs font-bold text-center">🎉 تم رصد كارت الطالب (${student.name}) وإرسال طلب تسجيل الحضور بنجاح!</div>`;
+                alertBox.innerHTML = `<div class="p-2.5 bg-emerald-950 text-emerald-200 border border-emerald-500 rounded-xl text-xs font-bold text-center">🎉 تم رصد كارت الطالب (${student.name}) وإرسال طلب تسجيل الحضور للمشرف بنجاح!</div>`;
             }
             playSuccessSound();
             updateStudentPendingView(student.code);
@@ -463,6 +506,7 @@
         }
 
         function requestPaymentApproval() {
+            loadAllDataFromStorage();
             const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
             const type = document.getElementById('pay-type').value;
             const subject = document.getElementById('pay-subject').value;
@@ -475,7 +519,6 @@
             if (!student) {
                 student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
                 students.push(student);
-                saveLocal();
             }
 
             pendingPayments.push({ name: student.name, code: student.code, type, subject, month, amount, date: new Date().toLocaleString('ar-EG') });
@@ -539,6 +582,7 @@
 
         // ================= 2. لوحة تحكم المشرف الشاملة =================
         function renderAdminView() {
+            loadAllDataFromStorage();
             const container = document.getElementById('main-container');
 
             let totalRev = subscriptions.reduce((sum, s)=>sum+s.amount, 0);
@@ -550,7 +594,6 @@
                 studentOptionsHtml += `<option value="${st.code}" class="text-black">${st.name} (${st.code})</option>`;
             });
 
-            // توليد جدول المواعيد في لوحة المشرف للتحديث الفوري
             let adminScheduleHtml = '';
             schedules.forEach((sch, idx) => {
                 adminScheduleHtml += `
@@ -582,7 +625,6 @@
                         </div>
                     </div>
 
-                    <!-- إحصائيات مالية سريعة وزر طباعة التقارير -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div class="bg-emerald-950/40 p-4 rounded-2xl border border-emerald-500/30 text-center">
                             <span class="text-xs text-emerald-300 block">إجمالي الإيرادات المحصلة</span>
@@ -723,7 +765,7 @@
                         </button>
                     </div>
 
-                    <!-- إدارة شؤون الطلاب (مع إرسال الكيود والكيو آر والواتساب للتأخير) -->
+                    <!-- إدارة شؤون الطلاب -->
                     <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
                         <h3 class="font-bold text-sm text-blue-300"><i class="fa-solid fa-users ml-1"></i> سجل الطلاب المسجلين (${students.length}):</h3>
                         <div class="overflow-x-auto max-h-60 overflow-y-auto">
@@ -759,6 +801,7 @@
         }
 
         function addNewStudentFromPanel() {
+            loadAllDataFromStorage();
             const name = document.getElementById('new-st-name').value.trim();
             const phone = document.getElementById('new-st-phone').value.trim() || "غير محدد";
             if(!name) { alert("أدخل اسم الطالب أولاً!"); return; }
@@ -771,6 +814,7 @@
         }
 
         function addNewSchedule() {
+            loadAllDataFromStorage();
             const subject = document.getElementById('sch-subject').value.trim();
             const days = document.getElementById('sch-days').value.trim();
             const time = document.getElementById('sch-time').value.trim();
@@ -783,6 +827,7 @@
         }
 
         function deleteSchedule(idx) {
+            loadAllDataFromStorage();
             schedules.splice(idx, 1);
             saveLocal();
             renderAdminView();
@@ -802,6 +847,7 @@
         }
 
         function openReportsModal() {
+            loadAllDataFromStorage();
             let totalRev = subscriptions.reduce((sum, s)=>sum+s.amount, 0);
             let totalExp = expenses.reduce((sum, e)=>sum+e.amount, 0);
             let netProfit = totalRev - totalExp;
@@ -851,32 +897,41 @@
         }
 
         function approveAttendance(idx) {
+            loadAllDataFromStorage();
             let item = pendingAttendance.splice(idx, 1)[0];
-            approvedAttendance.push({ name: item.name, code: item.code, date: new Date().toLocaleString('ar-EG') });
-            saveLocal();
-            renderAdminView();
+            if(item) {
+                approvedAttendance.push({ name: item.name, code: item.code, date: new Date().toLocaleString('ar-EG') });
+                saveLocal();
+                renderAdminView();
+            }
         }
 
         function rejectAttendance(idx) {
+            loadAllDataFromStorage();
             pendingAttendance.splice(idx, 1);
             saveLocal();
             renderAdminView();
         }
 
         function approvePayment(idx) {
+            loadAllDataFromStorage();
             let item = pendingPayments.splice(idx, 1)[0];
-            subscriptions.push({ name: item.name, code: item.code, subject: item.subject, month: item.month, amount: item.amount, date: new Date().toLocaleString('ar-EG') });
-            saveLocal();
-            renderAdminView();
+            if(item) {
+                subscriptions.push({ name: item.name, code: item.code, subject: item.subject, month: item.month, amount: item.amount, date: new Date().toLocaleString('ar-EG') });
+                saveLocal();
+                renderAdminView();
+            }
         }
 
         function rejectPayment(idx) {
+            loadAllDataFromStorage();
             pendingPayments.splice(idx, 1);
             saveLocal();
             renderAdminView();
         }
 
         function addNewStudentDue() {
+            loadAllDataFromStorage();
             const code = document.getElementById('due-student-select').value;
             const title = document.getElementById('due-title').value.trim();
             const amount = parseFloat(document.getElementById('due-amount').value) || 0;
@@ -890,6 +945,7 @@
         }
 
         function addNewExpense() {
+            loadAllDataFromStorage();
             const title = document.getElementById('expense-title').value.trim();
             const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
 
@@ -901,6 +957,7 @@
         }
 
         function deleteStudent(index) {
+            loadAllDataFromStorage();
             if (confirm("هل أنت متأكد من حذف هذا الطالب؟")) {
                 students.splice(index, 1);
                 saveLocal();
