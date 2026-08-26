@@ -18,9 +18,10 @@
             background-position: center;
             background-attachment: fixed;
         }
+        /* تعديل رقم 3: حركة الشريط الترحيبي من اليمين إلى اليسار */
         @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
         .animate-marquee {
             display: inline-block;
@@ -39,17 +40,17 @@
                 <h2 class="text-2xl font-black text-blue-400 dark:text-blue-400 tracking-wider drop-shadow-md">مستر يسر الموافي</h2>
                 <p class="text-xs text-gray-200 dark:text-gray-300 font-bold mt-1 drop-shadow">نظام المحاسبة وإدارة الأعمال - نظام البكالوريا (دفعة 2027)</p>
             </div>
-            <button onclick="toggleDarkMode()" class="bg-black/30 dark:bg-slate-800/50 text-white p-2.5 rounded-2xl text-xl transition shadow hover:scale-105 border border-white/10" title="تبديل الوضع الليلي">
+            <button onclick="playClickSound(); toggleDarkMode()" class="bg-black/30 dark:bg-slate-800/50 text-white p-2.5 rounded-2xl text-xl transition shadow hover:scale-105 border border-white/10" title="تبديل الوضع الليلي">
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
 
         <!-- أزرار الاختيار بين الوضعين -->
         <div id="mode-selector" class="flex gap-4 justify-center border-b pb-4 border-white/20 dark:border-slate-800/50">
-            <button onclick="switchMode('student')" id="btn-mode-student" class="flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30">
+            <button onclick="playClickSound(); switchMode('student')" id="btn-mode-student" class="flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30">
                 <i class="fa-solid fa-graduation-cap"></i> بوابة الطالب الذكية
             </button>
-            <button onclick="requestAdminAccess()" id="btn-mode-admin" class="flex-1 bg-black/20 dark:bg-slate-800/40 text-gray-100 dark:text-gray-200 py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-white/10">
+            <button onclick="playClickSound(); requestAdminAccess()" id="btn-mode-admin" class="flex-1 bg-black/20 dark:bg-slate-800/40 text-gray-100 dark:text-gray-200 py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-white/10">
                 <i class="fa-solid fa-user-shield"></i> لوحة تحكم المشرف الشاملة
             </button>
         </div>
@@ -65,10 +66,10 @@
             <h3 class="text-lg font-bold text-blue-400"><i class="fa-solid fa-print ml-2"></i> معاينة المستند قبل الطباعة</h3>
             <div id="print-preview-content" class="bg-white p-4 rounded-xl text-black overflow-x-auto max-h-96 text-right"></div>
             <div class="flex gap-3 pt-2">
-                <button onclick="confirmPrint()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
+                <button onclick="playClickSound(); confirmPrint()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-check"></i> تأكيد وطباعة الآن
                 </button>
-                <button onclick="closePrintModal()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-bold text-xs transition">
+                <button onclick="playClickSound(); closePrintModal()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-bold text-xs transition">
                     إلغاء
                 </button>
             </div>
@@ -102,7 +103,6 @@
         if (isDarkMode) { applyDarkMode(true); }
 
         window.onload = function() {
-            // التحقق التلقائي لو رابط الموقع فيه كود طالب (التعديل رقم 2)
             const urlParams = new URLSearchParams(window.location.search);
             const scanCode = urlParams.get('code');
             if (scanCode) {
@@ -117,10 +117,10 @@
             } else {
                 renderStudentView();
             }
-            setInterval(syncRealtimeData, 1500); // التعديل رقم 7: تحديث لحظي كل ثانية ونصف
+            setInterval(syncRealtimeData, 1500);
         }
 
-        // التعديل رقم 7: المزامنة اللحظية للبيانات بين المشرف والطالب
+        // المزامنة اللحظية الشاملة مع منع ضياع بيانات الطلبات المعلقة
         function syncRealtimeData() {
             const savedStudents = localStorage.getItem('yossr_students');
             const savedSchedules = localStorage.getItem('yossr_schedules');
@@ -136,7 +136,6 @@
             if (savedPendingPay) pendingPayments = JSON.parse(savedPendingPay);
             if (savedSubs) subscriptions = JSON.parse(savedSubs);
 
-            // تحديث الواجهة النشطة حالياً للمشرف دون فقدان التركيز
             const adminTable = document.getElementById('admin-students-table-body');
             if (adminTable) {
                 renderAdminStudentsTable();
@@ -149,6 +148,24 @@
                     updateStudentPendingView(codeInput.value.trim());
                 }
             }
+        }
+
+        // التعديل رقم 1: صوت نقرات خفيف وجميل عند الضغط
+        function playClickSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+                osc.stop(ctx.currentTime + 0.08);
+            } catch(e) {}
         }
 
         function playSuccessSound() {
@@ -232,7 +249,7 @@
 
             container.innerHTML = `
                 <div class="space-y-6 text-right max-w-xl mx-auto">
-                    <!-- التعديل رقم 5: شريط رسالة ترحيبية متحركة -->
+                    <!-- التعديل رقم 3: شريط رسالة ترحيبية متحركة من اليمين إلى اليسار -->
                     <div class="bg-gradient-to-r from-blue-900/80 via-indigo-900/80 to-purple-900/80 p-3 rounded-2xl border border-blue-400/30 overflow-hidden shadow-lg">
                         <div class="whitespace-nowrap overflow-hidden">
                             <span class="animate-marquee font-bold text-xs text-blue-200">
@@ -250,13 +267,13 @@
                         <label class="block font-bold text-xs text-white">أدخل كودك الشخصي أو امسح كارت الحضور:</label>
                         <div class="flex gap-2">
                             <input type="text" id="portal-code-input" placeholder="مثال: MR:YOSSR-101" class="flex-1 px-4 py-2.5 border rounded-xl text-xs uppercase font-mono font-bold bg-black/30 dark:bg-slate-950/70 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                            <button onclick="loadStudentPortalData()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow border border-blue-400/30">استعلام</button>
+                            <button onclick="playClickSound(); loadStudentPortalData()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow border border-blue-400/30">استعلام</button>
                         </div>
                         <div class="flex gap-2 pt-1">
-                            <button onclick="startStudentQrScanner()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-emerald-400/30">
+                            <button onclick="playClickSound(); startStudentQrScanner()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-emerald-400/30">
                                 <i class="fa-solid fa-qrcode"></i> مسح كود الكارنيه (QR) بالكاميرا
                             </button>
-                            <button onclick="stopStudentQrScanner()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">إغلاق</button>
+                            <button onclick="playClickSound(); stopStudentQrScanner()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">إغلاق</button>
                         </div>
                         <div id="student-qr-reader" class="w-full max-w-xs mx-auto bg-black rounded-xl overflow-hidden"></div>
                     </div>
@@ -277,13 +294,12 @@
 
                         <div class="bg-emerald-950/40 dark:bg-slate-900/60 p-4 rounded-2xl border border-emerald-500/30 dark:border-slate-700 space-y-3 backdrop-blur-sm">
                             <h3 class="font-bold text-xs text-emerald-300">تسجيل حضور حصة اليوم (متاح دائماً):</h3>
-                            <button onclick="requestAttendanceApproval()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-emerald-400/30">
+                            <button onclick="playClickSound(); requestAttendanceApproval()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-emerald-400/30">
                                 <i class="fa-solid fa-check-circle"></i> إرسال طلب تسجيل الحضور للمشرف
                             </button>
                             <div id="attendance-alert-box"></div>
                         </div>
 
-                        <!-- التعديل رقم 6: تخصيص نوع الدفع (اشتراك شهر، رسوم امتحانات، مذكرة + المادة + الشهر + المبلغ) -->
                         <div class="bg-indigo-950/40 dark:bg-slate-900/60 p-4 rounded-2xl border border-indigo-500/30 dark:border-slate-700 space-y-3 backdrop-blur-sm">
                             <h3 class="font-bold text-xs text-indigo-300">إرسال طلب سداد أو مصروفات مخصصة:</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -313,7 +329,7 @@
                                     <input type="number" id="pay-amount" placeholder="مثال: 200" class="w-full px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                                 </div>
                             </div>
-                            <button onclick="requestPaymentApproval()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-indigo-400/30">
+                            <button onclick="playClickSound(); requestPaymentApproval()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-indigo-400/30">
                                 <i class="fa-solid fa-paper-plane"></i> إرسال تفاصيل السداد للمشرف (قيد المراجعة)
                             </button>
                             <div id="payment-alert-box"></div>
@@ -334,10 +350,10 @@
                         </div>
 
                         <div class="flex gap-2">
-                            <button onclick="copyStudentCode()" class="flex-1 bg-slate-800/80 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-white/20">
+                            <button onclick="playClickSound(); copyStudentCode()" class="flex-1 bg-slate-800/80 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-white/20">
                                 <i class="fa-solid fa-copy"></i> نسخ الكود
                             </button>
-                            <button onclick="openStudentCard()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-sky-400/30">
+                            <button onclick="playClickSound(); openStudentCard()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-sky-400/30">
                                 <i class="fa-solid fa-id-card"></i> كارت الحضور
                             </button>
                         </div>
@@ -345,7 +361,6 @@
                             <a id="direct-wa-support" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-emerald-400/30">
                                 <i class="fa-brands fa-whatsapp text-sm"></i> تواصل مباشر مع الإدارة
                             </a>
-                            <!-- التعديل رقم 8: إضافة لينك جروب الواتساب -->
                             <a href="${WHATSAPP_GROUP_LINK}" target="_blank" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-teal-400/30">
                                 <i class="fa-solid fa-users text-sm"></i> الانضمام لجروب الواتساب
                             </a>
@@ -468,6 +483,7 @@
             box.innerHTML = html;
         }
 
+        // التعديل رقم 2: حل مشكلة عدم ظهور الطلبات عند المشرف وتخزينها وحفظها فورياً
         function requestAttendanceApproval() {
             const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
             const alertBox = document.getElementById('attendance-alert-box');
@@ -476,7 +492,6 @@
             if (!student) {
                 student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
                 students.push(student);
-                saveLocal();
             }
 
             const todayStr = new Date().toLocaleDateString('ar-EG');
@@ -493,7 +508,7 @@
             }
 
             pendingAttendance.push({ name: student.name, code: student.code, date: new Date().toLocaleString('ar-EG') });
-            saveLocal();
+            saveLocal(); // حفظ فوري في LocalStorage لكي تظهر فوراً في لوحة المشرف
             alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/80 text-amber-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب الحضور بنجاح وهو الآن (قيد المراجعة).</div>`;
             updateStudentPendingView(student.code);
         }
@@ -511,11 +526,10 @@
             if (!student) {
                 student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
                 students.push(student);
-                saveLocal();
             }
 
             pendingPayments.push({ name: student.name, code: student.code, payType, subject, month, amount, date: new Date().toLocaleString('ar-EG') });
-            saveLocal();
+            saveLocal(); // حفظ فوري في LocalStorage لكي تظهر فوراً في لوحة المشرف
 
             alertBox.innerHTML = `<div class="p-2.5 bg-indigo-900/80 text-indigo-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب السداد للمشرف وهو (قيد المراجعة).</div>`;
             updateStudentPendingView(student.code);
@@ -568,14 +582,14 @@
 
                     <div class="flex flex-wrap gap-2 justify-between items-center bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 backdrop-blur-sm">
                         <div class="flex gap-2">
-                            <button onclick="exportFinancialReport()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-sky-400/30">
+                            <button onclick="playClickSound(); exportFinancialReport()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-sky-400/30">
                                 <i class="fa-solid fa-file-excel"></i> معاينة وطباعة التقرير المالي
                             </button>
-                            <button onclick="exportStudentsReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-blue-400/30">
+                            <button onclick="playClickSound(); exportStudentsReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-blue-400/30">
                                 <i class="fa-solid fa-users-rectangle"></i> معاينة تقرير الطلاب الكلي
                             </button>
                         </div>
-                        <button onclick="resetSystemData()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-rose-400/30">
+                        <button onclick="playClickSound(); resetSystemData()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-rose-400/30">
                             <i class="fa-solid fa-triangle-exclamation"></i> تصفير جميع البيانات
                         </button>
                     </div>
@@ -604,7 +618,7 @@
                             </select>
                             <input type="text" id="due-title" placeholder="بند المصروف (مثال: اشتراك أكتوبر / مذكرة)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="number" id="due-amount" placeholder="المبلغ المطلوب (ج)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                            <button onclick="addStudentDue()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-indigo-400/30">تحميل المطالبة المالية</button>
+                            <button onclick="playClickSound(); addStudentDue()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-indigo-400/30">تحميل المطالبة المالية</button>
                         </div>
                     </div>
 
@@ -614,7 +628,7 @@
                             <input type="text" id="sch-subject" placeholder="اسم المادة (محاسبة/إدارة)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="text" id="sch-days" placeholder="الأيام (مثال: السبت والأربعاء)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="text" id="sch-time" placeholder="الوقت (مثال: 2:00 ظهراً)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                            <button onclick="addSchedule()" class="bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-purple-400/30">إضافة موعد جديد</button>
+                            <button onclick="playClickSound(); addSchedule()" class="bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-purple-400/30">إضافة موعد جديد</button>
                         </div>
                         <div id="admin-schedules-list" class="space-y-2 pt-2 text-xs"></div>
                     </div>
@@ -624,7 +638,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                             <input type="text" id="new-student-name" placeholder="اسم الطالب الرباعي" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="text" id="new-student-phone" placeholder="رقم هاتف الطالب / ولي الأمر" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                            <button onclick="addNewStudent()" class="bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-blue-400/30">إضافة الطالب وتوليد الكود</button>
+                            <button onclick="playClickSound(); addNewStudent()" class="bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-blue-400/30">إضافة الطالب وتوليد الكود</button>
                         </div>
                     </div>
 
@@ -655,7 +669,7 @@
                             <div class="space-y-2">
                                 <input type="text" id="expense-title" placeholder="بند المصروف (مثال: طباعة مذكرات، إيجار)" class="w-full px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                                 <input type="number" id="expense-amount" placeholder="المبلغ (ج)" class="w-full px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                                <button onclick="addExpense()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-emerald-400/30">إضافة المصروف</button>
+                                <button onclick="playClickSound(); addExpense()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-emerald-400/30">إضافة المصروف</button>
                             </div>
                         </div>
 
@@ -687,8 +701,8 @@
                                 <span class="text-[10px] text-gray-300 font-mono block">كود: ${item.code} | ${item.date}</span>
                             </div>
                             <div class="flex gap-1.5">
-                                <button onclick="approveAttendance(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">موافقة</button>
-                                <button onclick="rejectAttendance(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
+                                <button onclick="playClickSound(); approveAttendance(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">موافقة</button>
+                                <button onclick="playClickSound(); rejectAttendance(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
                             </div>
                         </div>
                     `;
@@ -710,8 +724,8 @@
                                 <span class="text-[10px] text-indigo-300 block">${item.payType} (${item.subject} - شهر ${item.month}) بقيمة ${item.amount}ج</span>
                             </div>
                             <div class="flex gap-1.5">
-                                <button onclick="approvePayment(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">قبول السداد</button>
-                                <button onclick="rejectPayment(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
+                                <button onclick="playClickSound(); approvePayment(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">قبول السداد</button>
+                                <button onclick="playClickSound(); rejectPayment(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
                             </div>
                         </div>
                     `;
@@ -794,7 +808,7 @@
                 html += `
                     <div class="flex justify-between items-center bg-black/30 dark:bg-slate-950 p-2.5 rounded-xl border border-white/10 dark:border-slate-700">
                         <span><b>${sch.subject}:</b> ${sch.days} (${sch.time})</span>
-                        <button onclick="deleteSchedule(${idx})" class="bg-rose-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">حذف</button>
+                        <button onclick="playClickSound(); deleteSchedule(${idx})" class="bg-rose-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">حذف</button>
                     </div>
                 `;
             });
@@ -854,7 +868,7 @@
             if (!name) { alert("أدخل اسم الطالب!"); return; }
 
             const randNum = Math.floor(100 + Math.random() * 900);
-            const code = "MR:YOSSR-" + randNum; // التعديل رقم 4: الكود يبدأ بـ MR:YOSSR
+            const code = "MR:YOSSR-" + randNum;
 
             students.push({ name, code, phone: phone || "غير محدد", active: true });
             saveLocal();
@@ -885,7 +899,6 @@
                     let msg = encodeURIComponent(`أهلاً بك يا ${st.name} من مستر يسر الموافي (نظام المحاسبة وإدارة الأعمال).`);
                     waBtn = `<a href="https://wa.me/${cleanPhone}?text=${msg}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1" title="مراسلة واتساب"><i class="fa-brands fa-whatsapp"></i> واتس</a>`;
                     
-                    // التعديل رقم 3: زر إرسال رسالة تنبيه بسداد الاشتراك
                     let reminderMsg = encodeURIComponent(`عزيزي ولي الأمر / الطالب ${st.name}، نذكركم بأهمية سرعة سداد اشتراك المصروفات المستحقة لمنصة مستر يسر الموافي (كود الطالب: ${st.code}). مع خالص الشكر والتقدير.`);
                     reminderBtn = `<a href="https://wa.me/${cleanPhone}?text=${reminderMsg}" target="_blank" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1" title="تنبيه سداد"><i class="fa-solid fa-bell"></i> تنبيه سداد</a>`;
                 }
@@ -903,10 +916,10 @@
                         <td class="p-2.5 text-center space-x-1 space-x-reverse">
                             ${waBtn}
                             ${reminderBtn}
-                            <button onclick="printStudentCard('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="معاينة الكارنيه"><i class="fa-solid fa-id-card"></i></button>
-                            <button onclick="editStudent('${st.code}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تعديل البيانات"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="toggleStudentStatus('${st.code}')" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تبديل الحالة">تبديل</button>
-                            <button onclick="deleteStudent('${st.code}')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="playClickSound(); printStudentCard('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="معاينة الكارنيه"><i class="fa-solid fa-id-card"></i></button>
+                            <button onclick="playClickSound(); editStudent('${st.code}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تعديل البيانات"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="playClickSound(); toggleStudentStatus('${st.code}')" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تبديل الحالة">تبديل</button>
+                            <button onclick="playClickSound(); deleteStudent('${st.code}')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="حذف"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -943,7 +956,6 @@
             }
         }
 
-        // التعديل رقم 1: إلغاء الطباعة التلقائية وإظهار نافذة معاينة مع زر طباعة يدوي
         let currentPrintHTML = "";
 
         function showPrintModal(htmlContent) {
@@ -1046,7 +1058,6 @@
         }
 
         function printStudentCard(name, code) {
-            // التعديل رقم 2: جعل الـ QR يحتوي على رابط المنصة مباشرة مع الكود (مثلاً: ?code=MR:YOSSR-101)
             const currentUrl = window.location.href.split('?')[0];
             const directUrl = `${currentUrl}?code=${encodeURIComponent(code)}`;
 
