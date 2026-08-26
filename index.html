@@ -58,7 +58,7 @@
         const ADMIN_WHATSAPP = "201015706200";
 
         let students = JSON.parse(localStorage.getItem('yossr_students')) || [
-            { name: "أحمد محمد علي", code: "YOSS-101", phone: "01012345678", active: true }
+            { name: "أحمد محمد علي", code: "YOSSR-101", phone: "01012345678", active: true }
         ];
 
         let pendingAttendance = JSON.parse(localStorage.getItem('yossr_pending_att')) || [];
@@ -215,7 +215,7 @@
                     <div class="bg-black/25 dark:bg-slate-900/50 p-5 rounded-2xl border border-white/20 dark:border-slate-700/60 space-y-3 shadow-inner backdrop-blur-sm">
                         <label class="block font-bold text-xs text-white">أدخل كودك الشخصي أو امسح كارت الحضور:</label>
                         <div class="flex gap-2">
-                            <input type="text" id="portal-code-input" placeholder="مثال: YOSS-101" class="flex-1 px-4 py-2.5 border rounded-xl text-xs uppercase font-mono font-bold bg-black/30 dark:bg-slate-950/70 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            <input type="text" id="portal-code-input" placeholder="مثال: YOSSR-101" class="flex-1 px-4 py-2.5 border rounded-xl text-xs uppercase font-mono font-bold bg-black/30 dark:bg-slate-950/70 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <button onclick="playClickSound(); loadStudentPortalData()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow border border-blue-400/30">استعلام</button>
                         </div>
                         <div class="flex gap-2 pt-1">
@@ -249,9 +249,15 @@
                             <div id="attendance-alert-box"></div>
                         </div>
 
+                        <!-- قسم طلب السداد المحدث بالكامل -->
                         <div class="bg-indigo-950/40 dark:bg-slate-900/60 p-4 rounded-2xl border border-indigo-500/30 dark:border-slate-700 space-y-3 backdrop-blur-sm">
-                            <h3 class="font-bold text-xs text-indigo-300">إرسال طلب سداد مصروفات أو مذكرة:</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <h3 class="font-bold text-xs text-indigo-300">إرسال طلب سداد (اشتراك / مذكرة / امتحان):</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                                <select id="pay-type" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white border-white/30 dark:border-slate-700">
+                                    <option value="اشتراك الشهر" class="text-black">اشتراك الشهر</option>
+                                    <option value="رسوم مذكرة" class="text-black">رسوم مذكرة</option>
+                                    <option value="رسوم امتحانات" class="text-black">رسوم امتحانات</option>
+                                </select>
                                 <select id="pay-subject" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white border-white/30 dark:border-slate-700">
                                     <option value="المحاسبة" class="text-black">المحاسبة</option>
                                     <option value="إدارة الأعمال" class="text-black">إدارة الأعمال</option>
@@ -274,9 +280,10 @@
                             </div>
                         </div>
 
+                        <!-- جدول المواعيد المحدث تلقائياً -->
                         <div class="bg-black/20 dark:bg-slate-900/60 p-4 rounded-2xl border border-white/20 dark:border-slate-700 space-y-2 backdrop-blur-sm">
                             <h4 class="font-bold text-xs text-white"><i class="fa-solid fa-calendar-days ml-1"></i> جدول مواعيد المجموعات الثابت:</h4>
-                            <div class="text-[11px] text-gray-200 space-y-1">
+                            <div id="student-portal-schedules-box" class="text-[11px] text-gray-200 space-y-1">
                                 ${scheduleHtml}
                             </div>
                         </div>
@@ -409,7 +416,7 @@
 
             if (pendingPayList.length > 0) {
                 pendingPayList.forEach(p => {
-                    html += `<p class="text-indigo-300 font-bold">• طلب دفع (${p.subject} - ${p.month} بمبلغ ${p.amount}ج): <b>قيد المراجعة ⏳</b></p>`;
+                    html += `<p class="text-indigo-300 font-bold">• طلب دفع (${p.type} - ${p.subject} - ${p.month} بمبلغ ${p.amount}ج): <b>قيد المراجعة ⏳</b></p>`;
                 });
             } else {
                 html += `<p class="text-gray-300">• لا توجد طلبات دفع معلقة.</p>`;
@@ -457,6 +464,7 @@
 
         function requestPaymentApproval() {
             const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            const type = document.getElementById('pay-type').value;
             const subject = document.getElementById('pay-subject').value;
             const month = document.getElementById('pay-month').value;
             const amount = parseFloat(document.getElementById('pay-amount').value) || 0;
@@ -470,7 +478,7 @@
                 saveLocal();
             }
 
-            pendingPayments.push({ name: student.name, code: student.code, subject, month, amount, date: new Date().toLocaleString('ar-EG') });
+            pendingPayments.push({ name: student.name, code: student.code, type, subject, month, amount, date: new Date().toLocaleString('ar-EG') });
             saveLocal();
 
             alertBox.innerHTML = `<div class="p-2.5 bg-indigo-900/80 text-indigo-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب السداد للمشرف وهو (قيد المراجعة).</div>`;
@@ -542,6 +550,17 @@
                 studentOptionsHtml += `<option value="${st.code}" class="text-black">${st.name} (${st.code})</option>`;
             });
 
+            // توليد جدول المواعيد في لوحة المشرف للتحديث الفوري
+            let adminScheduleHtml = '';
+            schedules.forEach((sch, idx) => {
+                adminScheduleHtml += `
+                    <div class="flex justify-between items-center bg-black/20 p-2.5 rounded-xl border border-white/10 text-xs">
+                        <span><b>${sch.subject}:</b> ${sch.days} (${sch.time})</span>
+                        <button onclick="deleteSchedule(${idx})" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+
             container.innerHTML = `
                 <div class="space-y-6 text-right">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -563,8 +582,8 @@
                         </div>
                     </div>
 
-                    <!-- إحصائيات مالية سريعة -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <!-- إحصائيات مالية سريعة وزر طباعة التقارير -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div class="bg-emerald-950/40 p-4 rounded-2xl border border-emerald-500/30 text-center">
                             <span class="text-xs text-emerald-300 block">إجمالي الإيرادات المحصلة</span>
                             <span class="text-lg font-black text-emerald-200">${totalRev} ج.م</span>
@@ -576,6 +595,38 @@
                         <div class="bg-blue-950/40 p-4 rounded-2xl border border-blue-500/30 text-center">
                             <span class="text-xs text-blue-300 block">إجمالي الحضور المعتمد</span>
                             <span class="text-lg font-black text-blue-200">${approvedAttendance.length} حصة</span>
+                        </div>
+                        <div class="bg-purple-950/40 p-4 rounded-2xl border border-purple-500/30 flex flex-col justify-center items-center">
+                            <span class="text-xs text-purple-300 mb-1">التقارير الشاملة</span>
+                            <button onclick="playClickSound(); openReportsModal()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl text-xs font-bold transition shadow">
+                                <i class="fa-solid fa-print ml-1"></i> عرض وطباعة التقارير
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- إضافة طالب جديد مباشرة من واجهة المشرف -->
+                    <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                        <h3 class="font-bold text-sm text-blue-300"><i class="fa-solid fa-user-plus ml-1"></i> تسجيل طالب جديد بالبوابة:</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <input type="text" id="new-st-name" placeholder="اسم الطالب الرباعي" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            <input type="text" id="new-st-phone" placeholder="رقم الهاتف (واتساب)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700" dir="ltr">
+                            <button onclick="playClickSound(); addNewStudentFromPanel()" class="bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition">إضافة وحفظ الطالب وتوليد كود YOSSR</button>
+                        </div>
+                    </div>
+
+                    <!-- إدارة وتحديث مواعيد الحصص التي تظهر تلقائياً للطالب -->
+                    <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                        <h3 class="font-bold text-sm text-teal-300"><i class="fa-solid fa-calendar-alt ml-1"></i> إدارة جدول مواعيد الحصص (تحديث تلقائي للطالب):</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <input type="text" id="sch-subject" placeholder="اسم المادة (مثال: المحاسبة)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            <input type="text" id="sch-days" placeholder="الأيام (مثال: السبت والأربعاء)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            <input type="text" id="sch-time" placeholder="الوقت (مثال: 2:00 ظهراً)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                        </div>
+                        <button onclick="playClickSound(); addNewSchedule()" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition">
+                            إضافة موعد جديد وتحديثه فوراً ببوابة الطلاب
+                        </button>
+                        <div class="space-y-1 mt-2">
+                            ${adminScheduleHtml}
                         </div>
                     </div>
 
@@ -618,6 +669,7 @@
                                 <thead>
                                     <tr class="border-b border-white/20 text-gray-300">
                                         <th class="p-2.5">اسم الطالب</th>
+                                        <th class="p-2.5">النوع والبند</th>
                                         <th class="p-2.5">المادة</th>
                                         <th class="p-2.5">الشهر</th>
                                         <th class="p-2.5">المبلغ</th>
@@ -625,10 +677,11 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-white/10">
-                                    ${pendingPayments.length === 0 ? `<tr><td colspan="5" class="p-3 text-center text-gray-400">لا توجد طلبات سداد معلقة حالياً.</td></tr>` : 
+                                    ${pendingPayments.length === 0 ? `<tr><td colspan="6" class="p-3 text-center text-gray-400">لا توجد طلبات سداد معلقة حالياً.</td></tr>` : 
                                         pendingPayments.map((item, idx) => `
                                             <tr class="hover:bg-white/5">
                                                 <td class="p-2.5 font-bold">${item.name} (${item.code})</td>
+                                                <td class="p-2.5 text-indigo-300">${item.type}</td>
                                                 <td class="p-2.5">${item.subject}</td>
                                                 <td class="p-2.5">${item.month}</td>
                                                 <td class="p-2.5 font-bold text-emerald-400">${item.amount} ج</td>
@@ -670,12 +723,9 @@
                         </button>
                     </div>
 
-                    <!-- إدارة شؤون الطلاب (مع عرض رقم الهاتف) -->
+                    <!-- إدارة شؤون الطلاب (مع إرسال الكيود والكيو آر والواتساب للتأخير) -->
                     <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-bold text-sm text-blue-300"><i class="fa-solid fa-users ml-1"></i> سجل الطلاب المسجلين (${students.length}):</h3>
-                            <button onclick="playClickSound(); addNewStudentPrompt()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition">إضافة طالب جديد</button>
-                        </div>
+                        <h3 class="font-bold text-sm text-blue-300"><i class="fa-solid fa-users ml-1"></i> سجل الطلاب المسجلين (${students.length}):</h3>
                         <div class="overflow-x-auto max-h-60 overflow-y-auto">
                             <table class="w-full text-xs text-right border-collapse">
                                 <thead>
@@ -683,7 +733,7 @@
                                         <th class="p-2.5">اسم الطالب</th>
                                         <th class="p-2.5">الكود</th>
                                         <th class="p-2.5">رقم الهاتف</th>
-                                        <th class="p-2.5 text-center">الإجراءات</th>
+                                        <th class="p-2.5 text-center">الإجراءات والواتساب والكارنيه</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-white/10">
@@ -693,7 +743,8 @@
                                             <td class="p-2.5 font-mono">${st.code}</td>
                                             <td class="p-2.5 text-emerald-300 font-mono" dir="ltr">${st.phone}</td>
                                             <td class="p-2.5 text-center flex justify-center gap-1.5">
-                                                <a href="https://wa.me/2${st.phone}" target="_blank" onclick="playClickSound()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg transition" title="مراسلة واتساب"><i class="fa-brands fa-whatsapp"></i></a>
+                                                <button onclick="playClickSound(); sendStudentQrWhatsApp('${st.name}', '${st.code}', '${st.phone}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg transition" title="إرسال رابط الكيو آر والكارنيه عبر واتساب"><i class="fa-brands fa-whatsapp"></i> QR</button>
+                                                <button onclick="playClickSound(); sendStudentDueWarningWhatsApp('${st.name}', '${st.code}', '${st.phone}')" class="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded-lg transition" title="تنبيه بالمتأخرات عبر واتساب"><i class="fa-solid fa-triangle-exclamation"></i> تنبيه دفع</button>
                                                 <button onclick="playClickSound(); showStudentCardModal('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded-lg transition" title="عرض الكارنيه"><i class="fa-solid fa-id-card"></i></button>
                                                 <button onclick="playClickSound(); deleteStudent(${index})" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-lg transition" title="حذف"><i class="fa-solid fa-trash"></i></button>
                                             </td>
@@ -702,6 +753,98 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addNewStudentFromPanel() {
+            const name = document.getElementById('new-st-name').value.trim();
+            const phone = document.getElementById('new-st-phone').value.trim() || "غير محدد";
+            if(!name) { alert("أدخل اسم الطالب أولاً!"); return; }
+            
+            const randomCode = "YOSSR-" + Math.floor(100 + Math.random() * 900);
+            students.push({ name, code: randomCode, phone, active: true });
+            saveLocal();
+            renderAdminView();
+            alert("تم إضافة الطالب بنجاح برمز تعريف: " + randomCode);
+        }
+
+        function addNewSchedule() {
+            const subject = document.getElementById('sch-subject').value.trim();
+            const days = document.getElementById('sch-days').value.trim();
+            const time = document.getElementById('sch-time').value.trim();
+
+            if(!subject || !days || !time) { alert("أدخل بيانات الموعد كاملة!"); return; }
+            schedules.push({ subject, days, time });
+            saveLocal();
+            renderAdminView();
+            alert("تم تحديث جدول المواعيد وإضافته بنجاح للطالب!");
+        }
+
+        function deleteSchedule(idx) {
+            schedules.splice(idx, 1);
+            saveLocal();
+            renderAdminView();
+        }
+
+        function sendStudentQrWhatsApp(name, code, phone) {
+            if(phone === "غير محدد" || !phone) { alert("رقم هاتف الطالب غير متوفر!"); return; }
+            const cardUrl = window.location.origin + window.location.pathname + "?code=" + code;
+            const msg = encodeURIComponent(`أهلاً بك يا بطل/ة ${name} 🌟\nإليك رابط كارت الحضور الشخصي (QR Code الخاص بك) لمستر يسر الموافي للمحاسبة وإدارة الأعمال[cite: 1]:\n${cardUrl}\nكود التعريفي الخاص بك هو: ${code}`);
+            window.open(`https://wa.me/2${phone}?text=${msg}`, '_blank');
+        }
+
+        function sendStudentDueWarningWhatsApp(name, code, phone) {
+            if(phone === "غير محدد" || !phone) { alert("رقم هاتف الطالب غير متوفر!"); return; }
+            const msg = encodeURIComponent(`تحياتي يا بطل/ة ${name} (كود: ${code}) 📚\nنذكرك بوجود مصروفات أو اشتراكات متأخرة مستحقة عليك في مادة المحاسبة وإدارة الأعمال لدى مستر يسر الموافي[cite: 1]، نرجو سرعة سدادها في أقرب وقت لتفادي توقف الحساب.`);
+            window.open(`https://wa.me/2${phone}?text=${msg}`, '_blank');
+        }
+
+        function openReportsModal() {
+            let totalRev = subscriptions.reduce((sum, s)=>sum+s.amount, 0);
+            let totalExp = expenses.reduce((sum, e)=>sum+e.amount, 0);
+            let netProfit = totalRev - totalExp;
+
+            const area = document.getElementById('print-card-area');
+            area.className = "fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto";
+            area.innerHTML = `
+                <div class="bg-slate-900 border border-slate-700 p-6 rounded-3xl w-full max-w-2xl text-right space-y-5 shadow-2xl text-white my-8">
+                    <div class="flex justify-between items-center border-b pb-3 border-slate-700">
+                        <h3 class="text-lg font-black text-purple-400"><i class="fa-solid fa-file-lines ml-1"></i> التقرير المالي والإحصائي الشامل</h3>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div class="bg-emerald-950/60 p-3 rounded-xl border border-emerald-500/30">
+                            <span class="text-[11px] text-emerald-300 block">إجمالي الإيرادات</span>
+                            <span class="font-black text-emerald-200">${totalRev} ج.م</span>
+                        </div>
+                        <div class="bg-rose-950/60 p-3 rounded-xl border border-rose-500/30">
+                            <span class="text-[11px] text-rose-300 block">إجمالي المصروفات</span>
+                            <span class="font-black text-rose-200">${totalExp} ج.م</span>
+                        </div>
+                        <div class="bg-blue-950/60 p-3 rounded-xl border border-blue-500/30">
+                            <span class="text-[11px] text-blue-300 block">صافي الخزينة</span>
+                            <span class="font-black text-blue-200">${netProfit} ج.م</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        <h4 class="font-bold text-xs text-teal-300">سجل الإيرادات والاشتراكات المحصلة:</h4>
+                        ${subscriptions.length === 0 ? `<p class="text-xs text-gray-400">لا توجد إيرادات مسجلة.</p>` : 
+                            subscriptions.map(s => `<div class="bg-black/30 p-2 rounded-lg text-xs flex justify-between"><span>${s.name} (${s.subject} - ${s.month})</span><span class="font-bold text-emerald-400">${s.amount} ج</span></div>`).join('')}
+                    </div>
+
+                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        <h4 class="font-bold text-xs text-amber-300">سجل مصروفات السنتر والتشغيل:</h4>
+                        ${expenses.length === 0 ? `<p class="text-xs text-gray-400">لا توجد مصروفات مسجلة.</p>` : 
+                            expenses.map(e => `<div class="bg-black/30 p-2 rounded-lg text-xs flex justify-between"><span>${e.title}</span><span class="font-bold text-rose-400">${e.amount} ج</span></div>`).join('')}
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="window.print()" class="flex-1 bg-purple-600 hover:bg-purple-700 py-2.5 rounded-xl text-xs font-bold transition">طباعة التقرير (PDF / ورقي)</button>
+                        <button onclick="closeModal()" class="flex-1 bg-slate-700 hover:bg-slate-800 py-2.5 rounded-xl text-xs font-bold transition">إغلاق</button>
                     </div>
                 </div>
             `;
@@ -755,18 +898,6 @@
             saveLocal();
             alert("تم تسجيل المصروف بنجاح!");
             renderAdminView();
-        }
-
-        function addNewStudentPrompt() {
-            const name = prompt("أدخل اسم الطالب الرباعي:");
-            if (!name) return;
-            const phone = prompt("أدخل رقم هاتف الطالب:") || "غير محدد";
-            const randomCode = "YOSS-" + Math.floor(100 + Math.random() * 900);
-
-            students.push({ name, code: randomCode, phone, active: true });
-            saveLocal();
-            renderAdminView();
-            alert("تم إضافة الطالب بنجاح برمز تعريف: " + randomCode);
         }
 
         function deleteStudent(index) {
