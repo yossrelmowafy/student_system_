@@ -75,9 +75,25 @@
         let isDarkMode = localStorage.getItem('yossr_dark_mode') === 'true';
         if (isDarkMode) { applyDarkMode(true); }
 
-        window.onload = function() {
+        // التحقق التلقائي عند فتح الرابط عبر الـ QR الخاص بالكارت
+        window.addEventListener('DOMContentLoaded', () => {
             renderStudentView();
-        }
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentCodeFromURL = urlParams.get('code');
+
+            if (studentCodeFromURL) {
+                const cleanCode = studentCodeFromURL.trim().toUpperCase();
+                setTimeout(() => {
+                    const codeInput = document.getElementById('portal-code-input');
+                    if (codeInput) {
+                        codeInput.value = cleanCode;
+                        loadStudentPortalData();
+                        requestAttendanceAuto(cleanCode);
+                    }
+                }, 300);
+            }
+        });
 
         function playSuccessSound() {
             try {
@@ -195,7 +211,7 @@
                         </div>
 
                         <div class="bg-emerald-950/40 dark:bg-slate-900/60 p-4 rounded-2xl border border-emerald-500/30 dark:border-slate-700 space-y-3 backdrop-blur-sm">
-                            <h3 class="font-bold text-xs text-emerald-300">تسجيل حضور حصة اليوم (متاح دائماً):</h3>
+                            <h3 class="font-bold text-xs text-emerald-300">تسجيل حضور حصة اليوم:</h3>
                             <button onclick="requestAttendanceApproval()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-emerald-400/30">
                                 <i class="fa-solid fa-check-circle"></i> إرسال طلب تسجيل الحضور للمشرف
                             </button>
@@ -242,9 +258,13 @@
                                 <i class="fa-solid fa-id-card"></i> كارت الحضور
                             </button>
                         </div>
-                        <div>
-                            <a id="direct-wa-support" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-emerald-400/30">
-                                <i class="fa-brands fa-whatsapp text-sm"></i> تواصل مباشر مع الإدارة عبر الواتساب
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <a href="https://chat.whatsapp.com/CHQTsKqmsRSK0jJqkHU4Ou" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-emerald-400/30">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> الانضمام لجروب الواتساب (المحاسبة وإدارة الأعمال)[cite: 1]
+                            </a>
+                            <a id="direct-wa-support" href="#" target="_blank" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-slate-500/30">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> تواصل مباشر مع الإدارة
                             </a>
                         </div>
                     </div>
@@ -261,9 +281,8 @@
                 (decodedText) => {
                     const rawCode = decodedText.trim();
                     const parts = rawCode.split('/');
-                    const cleanCode = parts[parts.length - 1].trim().toUpperCase();
+                    const cleanCode = parts[parts.length - 1].replace('?code=', '').trim().toUpperCase();
 
-                    // إنشاء أو جلب الطالب تلقائياً وبدون أي قيود أو رسائل خطأ
                     let student = students.find(s => s.code.toUpperCase() === cleanCode);
                     if (!student) {
                         student = { name: "طالب مسجل بالكاميرا (" + cleanCode + ")", code: cleanCode, phone: "غير محدد", active: true };
@@ -345,6 +364,7 @@
 
         function updateStudentPendingView(code) {
             const box = document.getElementById('student-pending-status-box');
+            if(!box) return;
             let pendingAttObj = pendingAttendance.find(a => a.code.toUpperCase() === code.toUpperCase());
             let pendingPayList = pendingPayments.filter(p => p.code.toUpperCase() === code.toUpperCase());
 
@@ -365,13 +385,10 @@
             box.innerHTML = html;
         }
 
-        function requestAttendanceApproval() {
-            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
-            const alertBox = document.getElementById('attendance-alert-box');
+        function requestAttendanceAuto(code) {
             let student = students.find(s => s.code.toUpperCase() === code);
-            
             if (!student) {
-                student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
+                student = { name: "طالب بالكارت (" + code + ")", code: code, phone: "غير محدد", active: true };
                 students.push(student);
                 saveLocal();
             }
@@ -379,20 +396,32 @@
             const todayStr = new Date().toLocaleDateString('ar-EG');
             const alreadyAttended = approvedAttendance.some(a => a.code.toUpperCase() === student.code.toUpperCase() && a.date.includes(todayStr));
             const alreadyPending = pendingAttendance.some(a => a.code.toUpperCase() === student.code.toUpperCase());
+            const alertBox = document.getElementById('attendance-alert-box');
 
-            if(alreadyAttended) {
-                alertBox.innerHTML = `<div class="p-2.5 bg-blue-900/80 text-blue-200 rounded-xl text-xs font-bold">ℹ️ تم قبول حضورك مسبقاً اليوم.</div>`;
+            if (alreadyAttended) {
+                if(alertBox) alertBox.innerHTML = `<div class="p-2.5 bg-blue-900/85 text-blue-200 rounded-xl text-xs font-bold text-center">ℹ️ أهلاً بك يا ${student.name}، لقد تم تسجيل حضورك مسبقاً اليوم.</div>`;
                 return;
             }
-            if(alreadyPending) {
-                alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/80 text-amber-200 rounded-xl text-xs font-bold">⏳ طلب حضورك مسجل مسبقاً وهو قيد المراجعة لدى المشرف.</div>`;
+            if (alreadyPending) {
+                if(alertBox) alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/85 text-amber-200 rounded-xl text-xs font-bold text-center">⏳ أهلاً بك يا ${student.name}، طلب حضورك مسجل وهو قيد المراجعة لدى المشرف.</div>`;
                 return;
             }
 
             pendingAttendance.push({ name: student.name, code: student.code, date: new Date().toLocaleString('ar-EG') });
             saveLocal();
-            alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/80 text-amber-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب الحضور بنجاح وهو الآن (قيد المراجعة).</div>`;
+            
+            if(alertBox) {
+                alertBox.innerHTML = `<div class="p-2.5 bg-emerald-950 text-emerald-200 border border-emerald-500 rounded-xl text-xs font-bold text-center">🎉 تم رصد كارت الطالب (${student.name}) وإرسال طلب تسجيل الحضور بنجاح!</div>`;
+            }
+            playSuccessSound();
             updateStudentPendingView(student.code);
+        }
+
+        function requestAttendanceApproval() {
+            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            const alertBox = document.getElementById('attendance-alert-box');
+            if(!code) { alert("أدخل كود الطالب أولاً!"); return; }
+            requestAttendanceAuto(code);
         }
 
         function requestPaymentApproval() {
@@ -498,7 +527,7 @@
                             <select id="due-student-code" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white border-white/30 dark:border-slate-700">
                                 ${studentOptionsHtml}
                             </select>
-                            <input type="text" id="due-title" placeholder="بند المصروف (مثال: اشتراك شهر أكتوبر / مذكرة المحاسبة)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            <input type="text" id="due-title" placeholder="بند المصروف (مثال: اشتراك شهر أكتوبر)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="number" id="due-amount" placeholder="المبلغ المطلوب (ج)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <button onclick="addStudentDue()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-indigo-400/30">تحميل المطالبة المالية</button>
                         </div>
@@ -547,9 +576,9 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-black/20 dark:bg-slate-900/50 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
-                            <h3 class="font-bold text-xs text-emerald-300"><i class="fa-solid fa-wallet ml-1"></i> تسجيل مصروفات السنتر أو المذكرات التشغيلية:</h3>
+                            <h3 class="font-bold text-xs text-emerald-300"><i class="fa-solid fa-wallet ml-1"></i> تسجيل مصروفات السنتر أو المذكرات:</h3>
                             <div class="space-y-2">
-                                <input type="text" id="expense-title" placeholder="بند المصروف (مثال: طباعة مذكرات، إيجار)" class="w-full px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                                <input type="text" id="expense-title" placeholder="بند المصروف (مثال: طباعة مذكرات)" class="w-full px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                                 <input type="number" id="expense-amount" placeholder="المبلغ (ج)" class="w-full px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                                 <button onclick="addExpense()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-emerald-400/30">إضافة المصروف</button>
                             </div>
@@ -925,6 +954,11 @@
         function printStudentCard(name, code) {
             const printArea = document.getElementById('print-card-area');
             printArea.classList.remove('hidden');
+            
+            // توليد رابط الـ QR بحيث يحتوي على رابط الموقع مضافاً إليه كود الطالب للتسجيل التلقائي
+            const currentBaseUrl = window.location.href.split('?')[0];
+            const studentQrUrl = `${currentBaseUrl}?code=${code}`;
+
             printArea.innerHTML = `
                 <div id="card-to-print" style="width: 350px; padding: 20px; background: linear-gradient(135deg, #0f172a, #1e293b); color: white; border-radius: 20px; text-align: center; font-family: Tahoma, sans-serif; border: 2px solid #3b82f6; margin: 20px auto;">
                     <h3 style="color: #60a5fa; margin: 0; font-size: 18px; font-weight: bold;">مستر يسر الموافي</h3>
@@ -939,7 +973,7 @@
             
             document.getElementById("qrcode-container").innerHTML = "";
             new QRCode(document.getElementById("qrcode-container"), {
-                text: code,
+                text: studentQrUrl,
                 width: 110,
                 height: 110,
             });
