@@ -141,6 +141,7 @@
                 const codeInput = document.getElementById('portal-code-input');
                 if (codeInput && codeInput.value.trim() !== '') {
                     updateStudentPendingView(codeInput.value.trim());
+                    updateStudentSchedulesView();
                 }
             }
         }
@@ -186,6 +187,7 @@
         function applyDarkMode(dark) {
             const card = document.getElementById('main-card');
             const icon = document.getElementById('theme-icon');
+            if (!card || !icon) return;
             if (dark) {
                 card.classList.add('dark');
                 icon.textContent = "☀️";
@@ -210,6 +212,7 @@
             stopStudentQrScanner();
             const studentBtn = document.getElementById('btn-mode-student');
             const adminBtn = document.getElementById('btn-mode-admin');
+            if(!studentBtn || !adminBtn) return;
 
             if (mode === 'student') {
                 studentBtn.className = "flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30";
@@ -234,6 +237,7 @@
         // ================= 1. بوابة الطالب الذكية =================
         function renderStudentView() {
             const container = document.getElementById('main-container');
+            if(!container) return;
             const todayName = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
             let scheduleHtml = '';
@@ -395,7 +399,9 @@
         }
 
         function loadStudentPortalData() {
-            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            const codeInput = document.getElementById('portal-code-input');
+            if(!codeInput) return;
+            const code = codeInput.value.trim().toUpperCase();
             if (!code) { alert("أدخل كود الطالب أو امسح الكارنيه أولاً!"); return; }
             let student = students.find(s => s.code.toUpperCase() === code);
             
@@ -405,60 +411,73 @@
                 saveLocal();
             }
 
-            document.getElementById('student-portal-details').classList.remove('hidden');
+            const portalDetails = document.getElementById('student-portal-details');
+            if(portalDetails) portalDetails.classList.remove('hidden');
 
-            let mySubs = subscriptions.filter(s => s.code.toUpperCase() === student.code.toUpperCase());
+            let mySubs = subscriptions.filter(s => s.code && s.code.toUpperCase() === student.code.toUpperCase());
             let totalPaid = 0;
-            mySubs.forEach(s => totalPaid += s.amount);
+            mySubs.forEach(s => totalPaid += (s.amount || 0));
 
-            let myDues = studentDues.filter(d => d.code.toUpperCase() === student.code.toUpperCase() || d.code === "ALL");
+            // جلب المطالبات المالية الخاصة بكود الطالب أو الموجهة للجميع (ALL)
+            let myDues = studentDues.filter(d => d.code && (d.code.toUpperCase() === student.code.toUpperCase() || d.code.toUpperCase() === "ALL"));
             let totalDue = 0;
-            myDues.forEach(d => totalDue += d.amount);
+            myDues.forEach(d => totalDue += (d.amount || 0));
 
             let remainingDue = totalDue - totalPaid;
             const alertBanner = document.getElementById('portal-financial-alert-banner');
 
-            if (remainingDue > 0) {
-                alertBanner.innerHTML = `
-                    <div class="bg-rose-950/60 border border-rose-500/40 p-3.5 rounded-2xl flex items-center justify-between text-xs shadow-sm backdrop-blur-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i>
-                            <div>
-                                <span class="font-bold text-rose-200 block">تنبيه مالي مهم:</span>
-                                <span class="text-rose-300">عليك مصروفات مستحقة بقيمة <b class="font-black underline">${remainingDue} ج.م</b>، يرجى سرعة سدادها.</span>
+            if (alertBanner) {
+                if (remainingDue > 0) {
+                    let duesDetailsHtml = `<ul class="list-disc list-inside text-xs mt-1 text-rose-200">`;
+                    myDues.forEach(d => {
+                        duesDetailsHtml += `<li><b>${d.title}:</b> ${d.amount} ج.م</li>`;
+                    });
+                    duesDetailsHtml += `</ul>`;
+
+                    alertBanner.innerHTML = `
+                        <div class="bg-rose-950/75 border border-rose-500/50 p-3.5 rounded-2xl text-right text-xs shadow-sm backdrop-blur-sm space-y-1">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i>
+                                <span class="font-bold text-rose-200">تنبيه مالي مهم:</span>
                             </div>
+                            <p class="text-rose-300">عليك مصروفات مستحقة بإجمالي <b class="font-black underline text-rose-100">${remainingDue} ج.م</b>.</p>
+                            ${duesDetailsHtml}
                         </div>
-                    </div>
-                `;
-            } else {
-                alertBanner.innerHTML = `
-                    <div class="bg-emerald-950/60 border border-emerald-500/40 p-3.5 rounded-2xl flex items-center justify-between text-xs shadow-sm backdrop-blur-sm">
-                        <div class="flex items-center gap-2">
+                    `;
+                } else {
+                    alertBanner.innerHTML = `
+                        <div class="bg-emerald-950/60 border border-emerald-500/40 p-3.5 rounded-2xl flex items-center gap-2 text-xs shadow-sm backdrop-blur-sm">
                             <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
                             <span class="font-bold text-emerald-200">حسابك ماليًا مستقر ولا توجد مصروفات متأخرة عليك حالياً.</span>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             }
 
             const badgeBox = document.getElementById('portal-fin-badge');
-            badgeBox.innerHTML = `<span class="bg-emerald-900/80 text-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold border border-emerald-500/30">إجمالي المدفوع (${totalPaid}ج)</span>`;
+            if(badgeBox) {
+                badgeBox.innerHTML = `<span class="bg-emerald-900/80 text-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold border border-emerald-500/30">إجمالي المدفوع (${totalPaid}ج)</span>`;
+            }
 
-            let myAtt = approvedAttendance.filter(a => a.code.toUpperCase() === student.code.toUpperCase());
-            document.getElementById('portal-att-count').innerText = `${myAtt.length} حصة`;
+            let myAtt = approvedAttendance.filter(a => a.code && a.code.toUpperCase() === student.code.toUpperCase());
+            const attCountElem = document.getElementById('portal-att-count');
+            if(attCountElem) attCountElem.innerText = `${myAtt.length} حصة`;
 
             updateStudentPendingView(student.code);
             updateStudentSchedulesView();
 
-            const supMsg = encodeURIComponent(`السلام عليكم مستر يسر، أنا الطالب/ة ${student.name} (كود: ${student.code}) وعندي استفسار بخصوص الحصص أو المصروفات.`);
-            document.getElementById('direct-wa-support').href = `https://wa.me/${ADMIN_WHATSAPP}?text=${supMsg}`;
+            const supLink = document.getElementById('direct-wa-support');
+            if(supLink) {
+                const supMsg = encodeURIComponent(`السلام عليكم مستر يسر، أنا الطالب/ة ${student.name} (كود: ${student.code}) وعندي استفسار بخصوص الحصص أو المصروفات.`);
+                supLink.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${supMsg}`;
+            }
         }
 
         function updateStudentPendingView(code) {
             const box = document.getElementById('student-pending-status-box');
             if(!box) return;
-            let pendingAttObj = pendingAttendance.find(a => a.code.toUpperCase() === code.toUpperCase());
-            let pendingPayList = pendingPayments.filter(p => p.code.toUpperCase() === code.toUpperCase());
+            let pendingAttObj = pendingAttendance.find(a => a.code && a.code.toUpperCase() === code.toUpperCase());
+            let pendingPayList = pendingPayments.filter(p => p.code && p.code.toUpperCase() === code.toUpperCase());
 
             let html = "";
             if (pendingAttObj) {
@@ -488,13 +507,18 @@
         }
 
         function requestAttendanceApproval() {
-            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            const codeInput = document.getElementById('portal-code-input');
+            if(!codeInput) return;
+            const code = codeInput.value.trim().toUpperCase();
+            if(!code) { alert("أدخل الكود أولاً!"); return; }
+            
             const alertBox = document.getElementById('attendance-alert-box');
             let student = students.find(s => s.code.toUpperCase() === code);
             
             if (!student) {
                 student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
                 students.push(student);
+                saveLocal();
             }
 
             const todayStr = new Date().toLocaleDateString('ar-EG');
@@ -502,22 +526,26 @@
             const alreadyPending = pendingAttendance.some(a => a.code.toUpperCase() === student.code.toUpperCase());
 
             if(alreadyAttended) {
-                alertBox.innerHTML = `<div class="p-2.5 bg-blue-900/80 text-blue-200 rounded-xl text-xs font-bold">ℹ️ تم قبول حضورك مسبقاً اليوم.</div>`;
+                if(alertBox) alertBox.innerHTML = `<div class="p-2.5 bg-blue-900/80 text-blue-200 rounded-xl text-xs font-bold">ℹ️ تم قبول حضورك مسبقاً اليوم.</div>`;
                 return;
             }
             if(alreadyPending) {
-                alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/80 text-amber-200 rounded-xl text-xs font-bold">⏳ طلب حضورك مسجل مسبقاً وهو قيد المراجعة لدى المشرف.</div>`;
+                if(alertBox) alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/80 text-amber-200 rounded-xl text-xs font-bold">⏳ طلب حضورك مسجل مسبقاً وهو قيد المراجعة لدى المشرف.</div>`;
                 return;
             }
 
             pendingAttendance.push({ name: student.name, code: student.code, date: new Date().toLocaleString('ar-EG') });
             saveLocal();
-            alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/80 text-amber-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب الحضور بنجاح وهو الآن (قيد المراجعة).</div>`;
+            if(alertBox) alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/80 text-amber-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب الحضور بنجاح وهو الآن (قيد المراجعة).</div>`;
             updateStudentPendingView(student.code);
         }
 
         function requestPaymentApproval() {
-            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            const codeInput = document.getElementById('portal-code-input');
+            if(!codeInput) return;
+            const code = codeInput.value.trim().toUpperCase();
+            if(!code) { alert("أدخل الكود أولاً!"); return; }
+
             const payType = document.getElementById('pay-type').value;
             const subject = document.getElementById('pay-subject').value;
             const month = document.getElementById('pay-month').value;
@@ -529,22 +557,26 @@
             if (!student) {
                 student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
                 students.push(student);
+                saveLocal();
             }
 
             pendingPayments.push({ name: student.name, code: student.code, payType, subject, month, amount, date: new Date().toLocaleString('ar-EG') });
             saveLocal();
 
-            alertBox.innerHTML = `<div class="p-2.5 bg-indigo-900/80 text-indigo-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب السداد للمشرف وهو (قيد المراجعة).</div>`;
+            if(alertBox) alertBox.innerHTML = `<div class="p-2.5 bg-indigo-900/80 text-indigo-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب السداد للمشرف وهو (قيد المراجعة).</div>`;
             updateStudentPendingView(student.code);
         }
 
         function copyStudentCode() {
             const code = document.getElementById('portal-code-input').value.trim();
-            navigator.clipboard.writeText(code).then(() => alert("تم نسخ الكود بنجاح: " + code));
+            if(code) {
+                navigator.clipboard.writeText(code).then(() => alert("تم نسخ الكود بنجاح: " + code));
+            }
         }
 
         function openStudentCard() {
             const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            if(!code) { alert("أدخل الكود أولاً!"); return; }
             let student = students.find(s => s.code.toUpperCase() === code);
             if (!student) {
                 student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
@@ -556,6 +588,7 @@
         // ================= 2. لوحة تحكم المشرف الشاملة =================
         function renderAdminView() {
             const container = document.getElementById('main-container');
+            if(!container) return;
 
             let studentOptionsHtml = `<option value="ALL" class="text-black">📢 فرض على جميع الطلاب (عام)</option>`;
             students.forEach(st => {
@@ -694,52 +727,54 @@
             const attBadge = document.getElementById('count-pending-att');
             if (attBadge) attBadge.innerText = pendingAttendance.length;
 
-            if (!attBox) return;
-            if (pendingAttendance.length === 0) {
-                attBox.innerHTML = `<p class="text-gray-400 text-center py-4">لا توجد طلبات حضور معلقة.</p>`;
-            } else {
-                let html = '';
-                pendingAttendance.forEach((item, index) => {
-                    html += `
-                        <div class="bg-black/30 dark:bg-slate-950 p-3 rounded-xl border border-white/10 dark:border-slate-700 flex justify-between items-center">
-                            <div>
-                                <span class="font-bold text-white">${item.name}</span>
-                                <span class="text-[10px] text-gray-300 font-mono block">كود: ${item.code} | ${item.date}</span>
+            if (attBox) {
+                if (pendingAttendance.length === 0) {
+                    attBox.innerHTML = `<p class="text-gray-400 text-center py-4">لا توجد طلبات حضور معلقة.</p>`;
+                } else {
+                    let html = '';
+                    pendingAttendance.forEach((item, index) => {
+                        html += `
+                            <div class="bg-black/30 dark:bg-slate-950 p-3 rounded-xl border border-white/10 dark:border-slate-700 flex justify-between items-center">
+                                <div>
+                                    <span class="font-bold text-white">${item.name}</span>
+                                    <span class="text-[10px] text-gray-300 font-mono block">كود: ${item.code} | ${item.date}</span>
+                                </div>
+                                <div class="flex gap-1.5">
+                                    <button onclick="playClickSound(); approveAttendance(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">موافقة</button>
+                                    <button onclick="playClickSound(); rejectAttendance(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
+                                </div>
                             </div>
-                            <div class="flex gap-1.5">
-                                <button onclick="playClickSound(); approveAttendance(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">موافقة</button>
-                                <button onclick="playClickSound(); rejectAttendance(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                attBox.innerHTML = html;
+                        `;
+                    });
+                    attBox.innerHTML = html;
+                }
             }
 
             const payBox = document.getElementById('admin-pending-pay-list');
             const payBadge = document.getElementById('count-pending-pay');
             if (payBadge) payBadge.innerText = pendingPayments.length;
 
-            if (!payBox) return;
-            if (pendingPayments.length === 0) {
-                payBox.innerHTML = `<p class="text-gray-400 text-center py-4">لا توجد طلبات سداد معلقة.</p>`;
-            } else {
-                let html = '';
-                pendingPayments.forEach((item, index) => {
-                    html += `
-                        <div class="bg-black/30 dark:bg-slate-950 p-3 rounded-xl border border-white/10 dark:border-slate-700 flex justify-between items-center">
-                            <div>
-                                <span class="font-bold text-white">${item.name}</span>
-                                <span class="text-[10px] text-indigo-300 block">${item.payType} (${item.subject} - شهر ${item.month}) بقيمة ${item.amount}ج</span>
+            if (payBox) {
+                if (pendingPayments.length === 0) {
+                    payBox.innerHTML = `<p class="text-gray-400 text-center py-4">لا توجد طلبات سداد معلقة.</p>`;
+                } else {
+                    let html = '';
+                    pendingPayments.forEach((item, index) => {
+                        html += `
+                            <div class="bg-black/30 dark:bg-slate-950 p-3 rounded-xl border border-white/10 dark:border-slate-700 flex justify-between items-center">
+                                <div>
+                                    <span class="font-bold text-white">${item.name}</span>
+                                    <span class="text-[10px] text-indigo-300 block">${item.payType} (${item.subject} - شهر ${item.month}) بقيمة ${item.amount}ج</span>
+                                </div>
+                                <div class="flex gap-1.5">
+                                    <button onclick="playClickSound(); approvePayment(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">قبول السداد</button>
+                                    <button onclick="playClickSound(); rejectPayment(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
+                                </div>
                             </div>
-                            <div class="flex gap-1.5">
-                                <button onclick="playClickSound(); approvePayment(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">قبول السداد</button>
-                                <button onclick="playClickSound(); rejectPayment(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                payBox.innerHTML = html;
+                        `;
+                    });
+                    payBox.innerHTML = html;
+                }
             }
         }
 
@@ -790,7 +825,7 @@
             saveLocal();
             document.getElementById('due-title').value = '';
             document.getElementById('due-amount').value = '';
-            alert("✅ تم تحميل المطالبة المالية بنجاح");
+            alert("✅ تم تحميل المطالبة المالية بنجاح وتحديثها للطالب فوراً");
         }
 
         function addSchedule() {
@@ -969,16 +1004,20 @@
 
         function showPrintModal(htmlContent) {
             currentPrintHTML = htmlContent;
-            document.getElementById('print-preview-content').innerHTML = htmlContent;
-            document.getElementById('print-modal').classList.remove('hidden');
+            const previewContent = document.getElementById('print-preview-content');
+            const printModal = document.getElementById('print-modal');
+            if(previewContent) previewContent.innerHTML = htmlContent;
+            if(printModal) printModal.classList.remove('hidden');
         }
 
         function closePrintModal() {
-            document.getElementById('print-modal').classList.add('hidden');
+            const printModal = document.getElementById('print-modal');
+            if(printModal) printModal.classList.add('hidden');
         }
 
         function confirmPrint() {
             const printArea = document.getElementById('print-card-area');
+            if(!printArea) return;
             printArea.classList.remove('hidden');
             printArea.innerHTML = currentPrintHTML;
             closePrintModal();
