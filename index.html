@@ -186,7 +186,7 @@
             const todayName = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
             let scheduleHtml = '';
-            let marqueeText = "أهلاً بك يا بطل في نظام مستر يسر الموافي للمحاسبة وإدارة الأعمال! 📚✨ | ";
+            let marqueeText = "أهلاً بك يا بطل في نظام مستر يسر الموافي للمحاسبة وإدارة الأعمال[cite: 1]! 📚✨ | ";
             
             if (schedules.length === 0) {
                 scheduleHtml = `<p class="text-gray-400">لا توجد مواعيد مضافة حالياً.</p>`;
@@ -325,6 +325,7 @@
                     document.getElementById('portal-code-input').value = student.code;
                     stopStudentQrScanner();
                     loadStudentPortalData();
+                    requestAttendanceAuto(student.code);
                 },
                 (err) => {}
             ).catch(err => alert("تأكد من إذن استخدام الكاميرا."));
@@ -532,6 +533,10 @@
         function renderAdminView() {
             const container = document.getElementById('main-container');
 
+            let totalRev = subscriptions.reduce((sum, s)=>sum+s.amount, 0);
+            let totalExp = expenses.reduce((sum, e)=>sum+e.amount, 0);
+            let netProfit = totalRev - totalExp;
+
             let studentOptionsHtml = `<option value="ALL" class="text-black">📢 فرض على جميع الطلاب (عام)</option>`;
             students.forEach(st => {
                 studentOptionsHtml += `<option value="${st.code}" class="text-black">${st.name} (${st.code})</option>`;
@@ -553,8 +558,24 @@
                             <span class="text-xl font-black text-indigo-300">${pendingPayments.length}</span>
                         </div>
                         <div class="bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 shadow-sm text-center backdrop-blur-sm">
-                            <span class="text-xs text-gray-300 block mb-1">إجمالي الإيرادات</span>
-                            <span class="text-xl font-black text-emerald-300">${subscriptions.reduce((sum, s)=>sum+s.amount, 0)} ج</span>
+                            <span class="text-xs text-gray-300 block mb-1">صافي الخزينة</span>
+                            <span class="text-xl font-black text-emerald-300">${netProfit} ج</span>
+                        </div>
+                    </div>
+
+                    <!-- إحصائيات مالية سريعة -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="bg-emerald-950/40 p-4 rounded-2xl border border-emerald-500/30 text-center">
+                            <span class="text-xs text-emerald-300 block">إجمالي الإيرادات المحصلة</span>
+                            <span class="text-lg font-black text-emerald-200">${totalRev} ج.م</span>
+                        </div>
+                        <div class="bg-rose-950/40 p-4 rounded-2xl border border-rose-500/30 text-center">
+                            <span class="text-xs text-rose-300 block">إجمالي المصروفات المسجلة</span>
+                            <span class="text-lg font-black text-rose-200">${totalExp} ج.م</span>
+                        </div>
+                        <div class="bg-blue-950/40 p-4 rounded-2xl border border-blue-500/30 text-center">
+                            <span class="text-xs text-blue-300 block">إجمالي الحضور المعتمد</span>
+                            <span class="text-lg font-black text-blue-200">${approvedAttendance.length} حصة</span>
                         </div>
                     </div>
 
@@ -637,7 +658,19 @@
                         </button>
                     </div>
 
-                    <!-- إدارة شؤون الطلاب -->
+                    <!-- تسجيل مصروفات المركز أو السنتر -->
+                    <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                        <h3 class="font-bold text-sm text-amber-300"><i class="fa-solid fa-wallet ml-1"></i> تسجيل مصروفات سنتر أو تشغيل جديدة:</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <input type="text" id="expense-title" placeholder="بند المصروف (مثال: إيجار القاعة، طباعة مذكرات)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            <input type="number" id="expense-amount" placeholder="المبلغ المنصرف (ج)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                        </div>
+                        <button onclick="playClickSound(); addNewExpense()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-amber-400/30">
+                            حفظ المصروف وخصمه من الخزينة
+                        </button>
+                    </div>
+
+                    <!-- إدارة شؤون الطلاب (مع عرض رقم الهاتف) -->
                     <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
                         <div class="flex justify-between items-center">
                             <h3 class="font-bold text-sm text-blue-300"><i class="fa-solid fa-users ml-1"></i> سجل الطلاب المسجلين (${students.length}):</h3>
@@ -649,7 +682,7 @@
                                     <tr class="border-b border-white/20 text-gray-300 sticky top-0 bg-slate-900/90 backdrop-blur">
                                         <th class="p-2.5">اسم الطالب</th>
                                         <th class="p-2.5">الكود</th>
-                                        <th class="p-2.5">الهاتف</th>
+                                        <th class="p-2.5">رقم الهاتف</th>
                                         <th class="p-2.5 text-center">الإجراءات</th>
                                     </tr>
                                 </thead>
@@ -658,8 +691,9 @@
                                         <tr class="hover:bg-white/5">
                                             <td class="p-2.5 font-bold">${st.name}</td>
                                             <td class="p-2.5 font-mono">${st.code}</td>
-                                            <td class="p-2.5">${st.phone}</td>
+                                            <td class="p-2.5 text-emerald-300 font-mono" dir="ltr">${st.phone}</td>
                                             <td class="p-2.5 text-center flex justify-center gap-1.5">
+                                                <a href="https://wa.me/2${st.phone}" target="_blank" onclick="playClickSound()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg transition" title="مراسلة واتساب"><i class="fa-brands fa-whatsapp"></i></a>
                                                 <button onclick="playClickSound(); showStudentCardModal('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded-lg transition" title="عرض الكارنيه"><i class="fa-solid fa-id-card"></i></button>
                                                 <button onclick="playClickSound(); deleteStudent(${index})" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-lg transition" title="حذف"><i class="fa-solid fa-trash"></i></button>
                                             </td>
@@ -710,6 +744,17 @@
             alert("تم إرسال المطالبة المالية بنجاح!");
             document.getElementById('due-title').value = "";
             document.getElementById('due-amount').value = "";
+        }
+
+        function addNewExpense() {
+            const title = document.getElementById('expense-title').value.trim();
+            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+
+            if (!title || amount <= 0) { alert("أدخل بيانات المصروف بشكل صحيح!"); return; }
+            expenses.push({ title, amount, date: new Date().toLocaleDateString('ar-EG') });
+            saveLocal();
+            alert("تم تسجيل المصروف بنجاح!");
+            renderAdminView();
         }
 
         function addNewStudentPrompt() {
