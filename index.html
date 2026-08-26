@@ -10,6 +10,8 @@
     </script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- مكتبة html2canvas لتحويل الكارت لصورة وتحميلها -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
        .hero-bg {
@@ -30,17 +32,17 @@
                 <h2 class="text-2xl font-black text-blue-400 dark:text-blue-400 tracking-wider drop-shadow-md">مستر يسر الموافي</h2>
                 <p class="text-xs text-gray-200 dark:text-gray-300 font-bold mt-1 drop-shadow">نظام المحاسبة وإدارة الأعمال - نظام البكالوريا (دفعة 2027)</p>
             </div>
-            <button onclick="toggleDarkMode()" class="bg-black/30 dark:bg-slate-800/50 text-white p-2.5 rounded-2xl text-xl transition shadow hover:scale-105 border border-white/10" title="تبديل الوضع الليلي">
+            <button onclick="playClickSound(); toggleDarkMode()" class="bg-black/30 dark:bg-slate-800/50 text-white p-2.5 rounded-2xl text-xl transition shadow hover:scale-105 border border-white/10" title="تبديل الوضع الليلي">
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
 
         <!-- أزرار الاختيار بين الوضعين -->
         <div id="mode-selector" class="flex gap-4 justify-center border-b pb-4 border-white/20 dark:border-slate-800/50">
-            <button onclick="switchMode('student')" id="btn-mode-student" class="flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30">
+            <button onclick="playClickSound(); switchMode('student')" id="btn-mode-student" class="flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30">
                 <i class="fa-solid fa-graduation-cap"></i> بوابة الطالب الذكية
             </button>
-            <button onclick="requestAdminAccess()" id="btn-mode-admin" class="flex-1 bg-black/20 dark:bg-slate-800/40 text-gray-100 dark:text-gray-200 py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-white/10">
+            <button onclick="playClickSound(); requestAdminAccess()" id="btn-mode-admin" class="flex-1 bg-black/20 dark:bg-slate-800/40 text-gray-100 dark:text-gray-200 py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-white/10">
                 <i class="fa-solid fa-user-shield"></i> لوحة تحكم المشرف الشاملة
             </button>
         </div>
@@ -50,7 +52,7 @@
 
     </div>
 
-    <!-- نافذة طباعة الكارنيهات والتقارير المخفية -->
+    <!-- نافذة عرض الكارنيه أو التقارير المنبثقة -->
     <div id="print-card-area" class="hidden"></div>
 
     <script>
@@ -75,7 +77,6 @@
         let isDarkMode = localStorage.getItem('yossr_dark_mode') === 'true';
         if (isDarkMode) { applyDarkMode(true); }
 
-        // التحقق التلقائي عند فتح الرابط عبر الـ QR الخاص بالكارت
         window.addEventListener('DOMContentLoaded', () => {
             renderStudentView();
             
@@ -94,6 +95,23 @@
                 }, 300);
             }
         });
+
+        // صوت نقرة خفيف عند الضغط على الأزرار
+        function playClickSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+                osc.stop(ctx.currentTime + 0.05);
+            } catch(e) {}
+        }
 
         function playSuccessSound() {
             try {
@@ -185,13 +203,13 @@
                         <label class="block font-bold text-xs text-white">أدخل كودك الشخصي أو امسح كارت الحضور:</label>
                         <div class="flex gap-2">
                             <input type="text" id="portal-code-input" placeholder="مثال: YOSS-101" class="flex-1 px-4 py-2.5 border rounded-xl text-xs uppercase font-mono font-bold bg-black/30 dark:bg-slate-950/70 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                            <button onclick="loadStudentPortalData()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow border border-blue-400/30">استعلام</button>
+                            <button onclick="playClickSound(); loadStudentPortalData()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow border border-blue-400/30">استعلام</button>
                         </div>
                         <div class="flex gap-2 pt-1">
-                            <button onclick="startStudentQrScanner()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-emerald-400/30">
+                            <button onclick="playClickSound(); startStudentQrScanner()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-emerald-400/30">
                                 <i class="fa-solid fa-qrcode"></i> مسح كود الكارنيه (QR) بالكاميرا
                             </button>
-                            <button onclick="stopStudentQrScanner()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">إغلاق</button>
+                            <button onclick="playClickSound(); stopStudentQrScanner()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">إغلاق</button>
                         </div>
                         <div id="student-qr-reader" class="w-full max-w-xs mx-auto bg-black rounded-xl overflow-hidden"></div>
                     </div>
@@ -212,7 +230,7 @@
 
                         <div class="bg-emerald-950/40 dark:bg-slate-900/60 p-4 rounded-2xl border border-emerald-500/30 dark:border-slate-700 space-y-3 backdrop-blur-sm">
                             <h3 class="font-bold text-xs text-emerald-300">تسجيل حضور حصة اليوم:</h3>
-                            <button onclick="requestAttendanceApproval()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-emerald-400/30">
+                            <button onclick="playClickSound(); requestAttendanceApproval()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-emerald-400/30">
                                 <i class="fa-solid fa-check-circle"></i> إرسال طلب تسجيل الحضور للمشرف
                             </button>
                             <div id="attendance-alert-box"></div>
@@ -230,7 +248,7 @@
                                 </select>
                                 <input type="number" id="pay-amount" placeholder="المبلغ (ج)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             </div>
-                            <button onclick="requestPaymentApproval()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-indigo-400/30">
+                            <button onclick="playClickSound(); requestPaymentApproval()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-indigo-400/30">
                                 <i class="fa-solid fa-paper-plane"></i> إرسال طلب السداد للمشرف (قيد المراجعة)
                             </button>
                             <div id="payment-alert-box"></div>
@@ -251,19 +269,19 @@
                         </div>
 
                         <div class="flex gap-2">
-                            <button onclick="copyStudentCode()" class="flex-1 bg-slate-800/80 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-white/20">
+                            <button onclick="playClickSound(); copyStudentCode()" class="flex-1 bg-slate-800/80 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-white/20">
                                 <i class="fa-solid fa-copy"></i> نسخ الكود
                             </button>
-                            <button onclick="openStudentCard()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-sky-400/30">
-                                <i class="fa-solid fa-id-card"></i> كارت الحضور
+                            <button onclick="playClickSound(); openStudentCard()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-sky-400/30">
+                                <i class="fa-solid fa-id-card"></i> عرض كارت الحضور والـ QR
                             </button>
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            <a href="https://chat.whatsapp.com/CHQTsKqmsRSK0jJqkHU4Ou" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-emerald-400/30">
+                            <a href="https://chat.whatsapp.com/CHQTsKqmsRSK0jJqkHU4Ou" target="_blank" onclick="playClickSound()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-emerald-400/30">
                                 <i class="fa-brands fa-whatsapp text-sm"></i> الانضمام لجروب الواتساب (المحاسبة وإدارة الأعمال)[cite: 1]
                             </a>
-                            <a id="direct-wa-support" href="#" target="_blank" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-slate-500/30">
+                            <a id="direct-wa-support" href="#" target="_blank" onclick="playClickSound()" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-slate-500/30">
                                 <i class="fa-brands fa-whatsapp text-sm"></i> تواصل مباشر مع الإدارة
                             </a>
                         </div>
@@ -419,7 +437,6 @@
 
         function requestAttendanceApproval() {
             const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
-            const alertBox = document.getElementById('attendance-alert-box');
             if(!code) { alert("أدخل كود الطالب أولاً!"); return; }
             requestAttendanceAuto(code);
         }
@@ -457,7 +474,7 @@
             if (!student) {
                 student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
             }
-            printStudentCard(student.name, student.code);
+            showStudentCardModal(student.name, student.code);
         }
 
 
@@ -493,14 +510,14 @@
 
                     <div class="flex flex-wrap gap-2 justify-between items-center bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 backdrop-blur-sm">
                         <div class="flex gap-2">
-                            <button onclick="exportFinancialReport()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-sky-400/30">
+                            <button onclick="playClickSound(); exportFinancialReport()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-sky-400/30">
                                 <i class="fa-solid fa-file-excel"></i> تصدير وطباعة التقرير المالي
                             </button>
-                            <button onclick="exportStudentsReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-blue-400/30">
+                            <button onclick="playClickSound(); exportStudentsReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-blue-400/30">
                                 <i class="fa-solid fa-users-rectangle"></i> تقرير الطلاب الكلي
                             </button>
                         </div>
-                        <button onclick="resetSystemData()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-rose-400/30">
+                        <button onclick="playClickSound(); resetSystemData()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-rose-400/30">
                             <i class="fa-solid fa-triangle-exclamation"></i> تصفير جميع البيانات
                         </button>
                     </div>
@@ -529,7 +546,7 @@
                             </select>
                             <input type="text" id="due-title" placeholder="بند المصروف (مثال: اشتراك شهر أكتوبر)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="number" id="due-amount" placeholder="المبلغ المطلوب (ج)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                            <button onclick="addStudentDue()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-indigo-400/30">تحميل المطالبة المالية</button>
+                            <button onclick="playClickSound(); addStudentDue()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-indigo-400/30">تحميل المطالبة المالية</button>
                         </div>
                     </div>
 
@@ -539,7 +556,7 @@
                             <input type="text" id="sch-subject" placeholder="اسم المادة (محاسبة/إدارة)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="text" id="sch-days" placeholder="الأيام (مثال: السبت والأربعاء)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="text" id="sch-time" placeholder="الوقت (مثال: 2:00 ظهراً)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                            <button onclick="addSchedule()" class="bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-purple-400/30">إضافة موعد جديد</button>
+                            <button onclick="playClickSound(); addSchedule()" class="bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-purple-400/30">إضافة موعد جديد</button>
                         </div>
                         <div id="admin-schedules-list" class="space-y-2 pt-2 text-xs"></div>
                     </div>
@@ -549,7 +566,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                             <input type="text" id="new-student-name" placeholder="اسم الطالب الرباعي" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                             <input type="text" id="new-student-phone" placeholder="رقم هاتف الطالب / ولي الأمر" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                            <button onclick="addNewStudent()" class="bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-blue-400/30">إضافة الطالب وتوليد الكود</button>
+                            <button onclick="playClickSound(); addNewStudent()" class="bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-blue-400/30">إضافة الطالب وتوليد الكود</button>
                         </div>
                     </div>
 
@@ -580,7 +597,7 @@
                             <div class="space-y-2">
                                 <input type="text" id="expense-title" placeholder="بند المصروف (مثال: طباعة مذكرات)" class="w-full px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
                                 <input type="number" id="expense-amount" placeholder="المبلغ (ج)" class="w-full px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
-                                <button onclick="addExpense()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-emerald-400/30">إضافة المصروف</button>
+                                <button onclick="playClickSound(); addExpense()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-emerald-400/30">إضافة المصروف</button>
                             </div>
                         </div>
 
@@ -612,8 +629,8 @@
                                 <span class="text-[10px] text-gray-300 font-mono block">كود: ${item.code} | ${item.date}</span>
                             </div>
                             <div class="flex gap-1.5">
-                                <button onclick="approveAttendance(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">موافقة</button>
-                                <button onclick="rejectAttendance(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
+                                <button onclick="playClickSound(); approveAttendance(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">موافقة</button>
+                                <button onclick="playClickSound(); rejectAttendance(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
                             </div>
                         </div>
                     `;
@@ -635,8 +652,8 @@
                                 <span class="text-[10px] text-indigo-300 block">${item.subject} - شهر ${item.month} (${item.amount}ج)</span>
                             </div>
                             <div class="flex gap-1.5">
-                                <button onclick="approvePayment(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">قبول السداد</button>
-                                <button onclick="rejectPayment(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
+                                <button onclick="playClickSound(); approvePayment(${index})" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">قبول السداد</button>
+                                <button onclick="playClickSound(); rejectPayment(${index})" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold">رفض</button>
                             </div>
                         </div>
                     `;
@@ -719,7 +736,7 @@
                 html += `
                     <div class="flex justify-between items-center bg-black/30 dark:bg-slate-950 p-2.5 rounded-xl border border-white/10 dark:border-slate-700">
                         <span><b>${sch.subject}:</b> ${sch.days} (${sch.time})</span>
-                        <button onclick="deleteSchedule(${idx})" class="bg-rose-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">حذف</button>
+                        <button onclick="playClickSound(); deleteSchedule(${idx})" class="bg-rose-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">حذف</button>
                     </div>
                 `;
             });
@@ -807,7 +824,7 @@
                 if (st.phone && st.phone !== "غير محدد") {
                     let cleanPhone = st.phone.startsWith('0') ? '2' + st.phone : st.phone;
                     let msg = encodeURIComponent(`أهلاً بك يا ${st.name} من مستر يسر الموافي (نظام المحاسبة وإدارة الأعمال).`);
-                    waBtn = `<a href="https://wa.me/${cleanPhone}?text=${msg}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1" title="مراسلة واتساب"><i class="fa-brands fa-whatsapp"></i> واتس</a>`;
+                    waBtn = `<a href="https://wa.me/${cleanPhone}?text=${msg}" target="_blank" onclick="playClickSound()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1" title="مراسلة واتساب"><i class="fa-brands fa-whatsapp"></i> واتس</a>`;
                 }
 
                 html += `
@@ -822,10 +839,10 @@
                         </td>
                         <td class="p-2.5 text-center space-x-1 space-x-reverse">
                             ${waBtn}
-                            <button onclick="printStudentCard('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="طباعة الكارنيه"><i class="fa-solid fa-id-card"></i></button>
-                            <button onclick="editStudent('${st.code}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تعديل البيانات"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="toggleStudentStatus('${st.code}')" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تبديل الحالة">تبديل</button>
-                            <button onclick="deleteStudent('${st.code}')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="playClickSound(); showStudentCardModal('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="عرض وكارنيه QR"><i class="fa-solid fa-id-card"></i></button>
+                            <button onclick="playClickSound(); editStudent('${st.code}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تعديل البيانات"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="playClickSound(); toggleStudentStatus('${st.code}')" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تبديل الحالة">تبديل</button>
+                            <button onclick="playClickSound(); deleteStudent('${st.code}')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="حذف"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -951,37 +968,59 @@
             }
         }
 
-        function printStudentCard(name, code) {
-            const printArea = document.getElementById('print-card-area');
-            printArea.classList.remove('hidden');
-            
-            // توليد رابط الـ QR بحيث يحتوي على رابط الموقع مضافاً إليه كود الطالب للتسجيل التلقائي
+        // عرض الكارت مع إمكانية التحميل المباشر لصورة (بدون إجبار طباعة)
+        function showStudentCardModal(name, code) {
             const currentBaseUrl = window.location.href.split('?')[0];
             const studentQrUrl = `${currentBaseUrl}?code=${code}`;
 
-            printArea.innerHTML = `
-                <div id="card-to-print" style="width: 350px; padding: 20px; background: linear-gradient(135deg, #0f172a, #1e293b); color: white; border-radius: 20px; text-align: center; font-family: Tahoma, sans-serif; border: 2px solid #3b82f6; margin: 20px auto;">
-                    <h3 style="color: #60a5fa; margin: 0; font-size: 18px; font-weight: bold;">مستر يسر الموافي</h3>
-                    <p style="font-size: 10px; color: #94a3b8; margin: 4px 0 15px 0;">نظام المحاسبة وإدارة الأعمال - البكالوريا</p>
-                    <div style="background: white; padding: 10px; border-radius: 12px; display: inline-block; margin-bottom: 10px;">
-                        <div id="qrcode-container"></div>
+            // إنشاء نافذة منبثقة عائمة لعرض الكارت وزر التحميل
+            let modalBg = document.createElement('div');
+            modalBg.id = "card-modal-bg";
+            modalBg.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;";
+
+            modalBg.innerHTML = `
+                <div style="background: #0f172a; padding: 25px; border-radius: 24px; text-align: center; border: 2px solid #3b82f6; max-width: 380px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+                    <h3 style="color: #60a5fa; margin: 0 0 5px 0; font-size: 18px; font-weight: bold;">معاينة كارت الحضور (QR)</h3>
+                    <p style="font-size: 11px; color: #94a3b8; margin-bottom: 20px;">قم بتحميل الكارت كصورة أو أغلق النافذة</p>
+                    
+                    <div id="capture-card-box" style="width: 320px; padding: 20px; background: linear-gradient(135deg, #0f172a, #1e293b); color: white; border-radius: 18px; text-align: center; font-family: Tahoma, sans-serif; border: 2px solid #3b82f6; margin: 0 auto 20px auto;">
+                        <h3 style="color: #60a5fa; margin: 0; font-size: 18px; font-weight: bold;">مستر يسر الموافي</h3>
+                        <p style="font-size: 10px; color: #94a3b8; margin: 4px 0 15px 0;">نظام المحاسبة وإدارة الأعمال - البكالوريا</p>
+                        <div id="modal-qrcode-container" style="background: white; padding: 10px; border-radius: 12px; display: inline-block; margin-bottom: 10px;"></div>
+                        <h4 style="margin: 5px 0; font-size: 16px; color: #f8fafc;">${name}</h4>
+                        <p style="margin: 0; font-size: 14px; font-family: monospace; color: #60a5fa; font-weight: bold;">الكود: ${code}</p>
                     </div>
-                    <h4 style="margin: 5px 0; font-size: 16px; color: #f8fafc;">${name}</h4>
-                    <p style="margin: 0; font-size: 14px; font-family: monospace; color: #60a5fa; font-weight: bold;">الكود: ${code}</p>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="playClickSound(); downloadCardImage('${code}')" style="flex: 1; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 12px;">تحميل الكارت كصورة 📥</button>
+                        <button onclick="playClickSound(); closeCardModal()" style="background: #475569; color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 12px;">إغلاق</button>
+                    </div>
                 </div>
             `;
-            
-            document.getElementById("qrcode-container").innerHTML = "";
-            new QRCode(document.getElementById("qrcode-container"), {
-                text: studentQrUrl,
-                width: 110,
-                height: 110,
-            });
+            document.body.appendChild(modalBg);
 
-            setTimeout(() => {
-                window.print();
-                printArea.classList.add('hidden');
-            }, 300);
+            document.getElementById("modal-qrcode-container").innerHTML = "";
+            new QRCode(document.getElementById("modal-qrcode-container"), {
+                text: studentQrUrl,
+                width: 115,
+                height: 115,
+            });
+        }
+
+        function closeCardModal() {
+            const modal = document.getElementById('card-modal-bg');
+            if (modal) modal.remove();
+        }
+
+        // دالة تحميل الكارت كصورة PNG مباشرة بدون الحاجة لطباعة إجبارية
+        function downloadCardImage(code) {
+            const cardElement = document.getElementById('capture-card-box');
+            html2canvas(cardElement, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Student_Card_${code}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
         }
     </script>
 </body>
