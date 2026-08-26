@@ -18,7 +18,6 @@
             background-position: center;
             background-attachment: fixed;
         }
-        /* تعديل رقم 3: حركة الشريط الترحيبي من اليمين إلى اليسار */
         @keyframes marquee {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
@@ -34,7 +33,6 @@
 
     <div id="main-card" class="bg-white/10 dark:bg-slate-950/20 text-gray-900 dark:text-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-5xl text-center space-y-6 backdrop-blur-md border border-white/20 dark:border-slate-700/30 transition-colors duration-300">
         
-        <!-- رأس الصفحة -->
         <div class="flex justify-between items-center border-b pb-4 border-white/20 dark:border-slate-800/50">
             <div class="text-right">
                 <h2 class="text-2xl font-black text-blue-400 dark:text-blue-400 tracking-wider drop-shadow-md">مستر يسر الموافي</h2>
@@ -45,7 +43,6 @@
             </button>
         </div>
 
-        <!-- أزرار الاختيار بين الوضعين -->
         <div id="mode-selector" class="flex gap-4 justify-center border-b pb-4 border-white/20 dark:border-slate-800/50">
             <button onclick="playClickSound(); switchMode('student')" id="btn-mode-student" class="flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30">
                 <i class="fa-solid fa-graduation-cap"></i> بوابة الطالب الذكية
@@ -55,12 +52,10 @@
             </button>
         </div>
 
-        <!-- حاوية المحتوى الديناميكي -->
         <div id="main-container"></div>
 
     </div>
 
-    <!-- نافذة المعاينة والتحكم قبل الطباعة -->
     <div id="print-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-lg w-full text-center space-y-4 shadow-2xl">
             <h3 class="text-lg font-bold text-blue-400"><i class="fa-solid fa-print ml-2"></i> معاينة المستند قبل الطباعة</h3>
@@ -76,7 +71,6 @@
         </div>
     </div>
 
-    <!-- نافذة طباعة الكارنيهات المخفية -->
     <div id="print-card-area" class="hidden"></div>
 
     <script>
@@ -117,10 +111,9 @@
             } else {
                 renderStudentView();
             }
-            setInterval(syncRealtimeData, 1500);
+            setInterval(syncRealtimeData, 1000);
         }
 
-        // المزامنة اللحظية الشاملة مع منع ضياع بيانات الطلبات المعلقة
         function syncRealtimeData() {
             const savedStudents = localStorage.getItem('yossr_students');
             const savedSchedules = localStorage.getItem('yossr_schedules');
@@ -128,6 +121,7 @@
             const savedApprovedAtt = localStorage.getItem('yossr_approved_att');
             const savedPendingPay = localStorage.getItem('yossr_pending_pay');
             const savedSubs = localStorage.getItem('yossr_subscriptions');
+            const savedDues = localStorage.getItem('yossr_student_dues');
 
             if (savedStudents) students = JSON.parse(savedStudents);
             if (savedSchedules) schedules = JSON.parse(savedSchedules);
@@ -135,6 +129,7 @@
             if (savedApprovedAtt) approvedAttendance = JSON.parse(savedApprovedAtt);
             if (savedPendingPay) pendingPayments = JSON.parse(savedPendingPay);
             if (savedSubs) subscriptions = JSON.parse(savedSubs);
+            if (savedDues) studentDues = JSON.parse(savedDues);
 
             const adminTable = document.getElementById('admin-students-table-body');
             if (adminTable) {
@@ -150,7 +145,6 @@
             }
         }
 
-        // التعديل رقم 1: صوت نقرات خفيف وجميل عند الضغط
         function playClickSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -249,7 +243,6 @@
 
             container.innerHTML = `
                 <div class="space-y-6 text-right max-w-xl mx-auto">
-                    <!-- التعديل رقم 3: شريط رسالة ترحيبية متحركة من اليمين إلى اليسار -->
                     <div class="bg-gradient-to-r from-blue-900/80 via-indigo-900/80 to-purple-900/80 p-3 rounded-2xl border border-blue-400/30 overflow-hidden shadow-lg">
                         <div class="whitespace-nowrap overflow-hidden">
                             <span class="animate-marquee font-bold text-xs text-blue-200">
@@ -344,7 +337,7 @@
 
                         <div class="bg-black/20 dark:bg-slate-900/60 p-4 rounded-2xl border border-white/20 dark:border-slate-700 space-y-2 backdrop-blur-sm">
                             <h4 class="font-bold text-xs text-white"><i class="fa-solid fa-calendar-days ml-1"></i> جدول مواعيد المجموعات الثابت:</h4>
-                            <div class="text-[11px] text-gray-200 space-y-1">
+                            <div id="student-schedules-box" class="text-[11px] text-gray-200 space-y-1">
                                 ${scheduleHtml}
                             </div>
                         </div>
@@ -455,6 +448,7 @@
             document.getElementById('portal-att-count').innerText = `${myAtt.length} حصة`;
 
             updateStudentPendingView(student.code);
+            updateStudentSchedulesView();
 
             const supMsg = encodeURIComponent(`السلام عليكم مستر يسر، أنا الطالب/ة ${student.name} (كود: ${student.code}) وعندي استفسار بخصوص الحصص أو المصروفات.`);
             document.getElementById('direct-wa-support').href = `https://wa.me/${ADMIN_WHATSAPP}?text=${supMsg}`;
@@ -483,7 +477,16 @@
             box.innerHTML = html;
         }
 
-        // التعديل رقم 2: حل مشكلة عدم ظهور الطلبات عند المشرف وتخزينها وحفظها فورياً
+        function updateStudentSchedulesView() {
+            const box = document.getElementById('student-schedules-box');
+            if(!box) return;
+            let html = '';
+            schedules.forEach(sch => {
+                html += `<p>• ${sch.subject}: ${sch.days} (${sch.time})</p>`;
+            });
+            box.innerHTML = html;
+        }
+
         function requestAttendanceApproval() {
             const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
             const alertBox = document.getElementById('attendance-alert-box');
@@ -508,7 +511,7 @@
             }
 
             pendingAttendance.push({ name: student.name, code: student.code, date: new Date().toLocaleString('ar-EG') });
-            saveLocal(); // حفظ فوري في LocalStorage لكي تظهر فوراً في لوحة المشرف
+            saveLocal();
             alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/80 text-amber-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب الحضور بنجاح وهو الآن (قيد المراجعة).</div>`;
             updateStudentPendingView(student.code);
         }
@@ -529,7 +532,7 @@
             }
 
             pendingPayments.push({ name: student.name, code: student.code, payType, subject, month, amount, date: new Date().toLocaleString('ar-EG') });
-            saveLocal(); // حفظ فوري في LocalStorage لكي تظهر فوراً في لوحة المشرف
+            saveLocal();
 
             alertBox.innerHTML = `<div class="p-2.5 bg-indigo-900/80 text-indigo-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب السداد للمشرف وهو (قيد المراجعة).</div>`;
             updateStudentPendingView(student.code);
@@ -597,14 +600,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
                             <h3 class="font-bold text-xs text-amber-300 flex items-center gap-1.5">
-                                <i class="fa-solid fa-bell"></i> طلبات الحضور المعلقة (${pendingAttendance.length})
+                                <i class="fa-solid fa-bell"></i> طلبات الحضور المعلقة (<span id="count-pending-att">${pendingAttendance.length}</span>)
                             </h3>
                             <div id="admin-pending-att-list" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div>
                         </div>
 
                         <div class="bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
                             <h3 class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
-                                <i class="fa-solid fa-money-check-dollar"></i> طلبات السداد المعلقة (${pendingPayments.length})
+                                <i class="fa-solid fa-money-check-dollar"></i> طلبات السداد المعلقة (<span id="count-pending-pay">${pendingPayments.length}</span>)
                             </h3>
                             <div id="admin-pending-pay-list" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div>
                         </div>
@@ -688,6 +691,9 @@
 
         function loadAdminPendingLists() {
             const attBox = document.getElementById('admin-pending-att-list');
+            const attBadge = document.getElementById('count-pending-att');
+            if (attBadge) attBadge.innerText = pendingAttendance.length;
+
             if (!attBox) return;
             if (pendingAttendance.length === 0) {
                 attBox.innerHTML = `<p class="text-gray-400 text-center py-4">لا توجد طلبات حضور معلقة.</p>`;
@@ -711,6 +717,9 @@
             }
 
             const payBox = document.getElementById('admin-pending-pay-list');
+            const payBadge = document.getElementById('count-pending-pay');
+            if (payBadge) payBadge.innerText = pendingPayments.length;
+
             if (!payBox) return;
             if (pendingPayments.length === 0) {
                 payBox.innerHTML = `<p class="text-gray-400 text-center py-4">لا توجد طلبات سداد معلقة.</p>`;
