@@ -2,206 +2,735 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>النظام الإداري الشامل - Mr. Yossr ElMowafy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مستر يسر الموافي - نظام المحاسبة وإدارة الأعمال</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 950px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; }
-        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #e1e8ed; border-radius: 8px; background: #fafbfc; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #34495e; }
-        select, input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { background-color: #3498db; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
-        button:hover { background-color: #2980b9; }
-        .print-btn { background-color: #27ae60; margin-top: 15px; }
-        .print-btn:hover { background-color: #219653; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background-color: #ecf0f1; color: #2c3e50; }
-        .badge-green { background-color: #d4edda; color: #155724; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
-        .badge-red { background-color: #f8d7da; color: #721c24; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
-        .hidden { display: none; }
-        
-        /* إعدادات الطباعة اليدوية فقط (لا تطبع إلا عند الضغط على الزر) */
-        @media print {
-            body { background: #fff; }
-            .no-print { display: none !important; }
-            .container { box-shadow: none; border: none; }
+       .hero-bg {
+            background: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.60)), url('https://raw.githubusercontent.com/yossrelmowafy/student_system/main/bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
     </style>
 </head>
-<body>
+<body id="page-body" class="hero-bg text-white min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
 
-<div class="container">
-
-    <!-- القسم الأول: بوابة الطالب (خيارات الدفع المتعددة) -->
-    <div class="section">
-        <h2>بوابة الطالب: تسجيل طلب دفع جديد</h2>
-        <form id="paymentForm">
-            <label>اختر نوع الدفع:</label>
-            <select id="paymentType" required>
-                <option value="">-- اضغط لتحديد نوع الدفع --</option>
-                <option value="اشتراك شهري">اشتراك شهري</option>
-                <option value="ثمن مذكرة">ثمن مذكرة / كتاب</option>
-                <option value="رسوم امتحان">رسوم امتحان دوري</option>
-            </select>
-            
-            <label>المبلغ المطلوب (جنيه):</label>
-            <input type="number" id="amount" placeholder="أدخل المبلغ" required>
-            
-            <button type="button" onclick="submitPayment()">إرسال طلب الدفع للمشرف</button>
-        </form>
-    </div>
-
-    <!-- القسم الثاني: بوابة المشرف (لوحة التحكم الشاملة) -->
-    <div class="section">
-        <h2>بوابة المشرف: متابعة الطلاب والطلبات المالية</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>كود الطالب</th>
-                    <th>اسم الطالب</th>
-                    <th>الموقف المالي</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="studentsTableBody">
-                <!-- يتم تعبئتها برمجياً -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- القسم الثالث: تقرير الطالب الشامل (للقراءة فقط + زر طباعة يدوي) -->
-    <div id="reportSection" class="section hidden">
-        <h2>تقرير الطالب الشامل</h2>
-        <p><strong>كود الطالب التعريفي:</strong> <span id="repCode">YOSSR-0001</span></p>
-        <p><strong>اسم الطالب:</strong> <span id="repName">اسم الطالب</span></p>
-        <p><strong>المرحلة الدراسية:</strong> البكالوريا (محاسبة وإدارة أعمال)</p>
+    <div id="main-card" class="bg-white/10 dark:bg-slate-950/20 text-gray-900 dark:text-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-5xl text-center space-y-6 backdrop-blur-md border border-white/20 dark:border-slate-700/30 transition-colors duration-300">
         
-        <hr style="border: 0; border-top: 1px solid #ddd; margin: 15px 0;">
-        
-        <h3>1. سجل الحضور والغياب</h3>
-        <p>عدد أيام الحضور: <strong style="color: #27ae60;" id="repAttendance">14 حصة</strong> | عدد أيام الغياب: <strong style="color: #c0392b;" id="repAbsence">حصة واحدة</strong></p>
-        
-        <h3>2. تفاصيل طلبات الدفع المالية</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>نوع المعاملة</th>
-                    <th>المبلغ</th>
-                    <th>حالة الطلب</th>
-                </tr>
-            </thead>
-            <tbody id="repPaymentsBody">
-                <!-- تفاصيل الدفعات -->
-            </tbody>
-        </table>
-        
-        <p style="margin-top: 15px;">الخلاصة المالية: <span id="repFinancialStatus" class="badge-green">مخلص (لا توجد متأخرات)</span></p>
-
-        <!-- أزرار التحكم (تختفي عند الطباعة اليدوية) -->
-        <div class="no-print" style="margin-top: 20px;">
-            <button class="print-btn" onclick="window.print()">🖨️ طباعة التقرير (يدوياً)</button>
-            <button style="background-color: #7f8c8d; margin-right: 10px;" onclick="closeReport()">إغلاق التقرير</button>
+        <!-- رأس الصفحة -->
+        <div class="flex justify-between items-center border-b pb-4 border-white/20 dark:border-slate-800/50">
+            <div class="text-right">
+                <h2 class="text-2xl font-black text-blue-400 dark:text-blue-400 tracking-wider drop-shadow-md">مستر يسر الموافي</h2>
+                <p class="text-xs text-gray-200 dark:text-gray-300 font-bold mt-1 drop-shadow">نظام المحاسبة وإدارة الأعمال - نظام البكالوريا (دفعة 2027)[cite: 1]</p>
+            </div>
+            <button onclick="playClickSound(); toggleDarkMode()" class="bg-black/30 dark:bg-slate-800/50 text-white p-2.5 rounded-2xl text-xl transition shadow hover:scale-105 border border-white/10" title="تبديل الوضع الليلي">
+                <span id="theme-icon">🌙</span>
+            </button>
         </div>
+
+        <!-- أزرار الاختيار بين الوضعين -->
+        <div id="mode-selector" class="flex gap-4 justify-center border-b pb-4 border-white/20 dark:border-slate-800/50">
+            <button onclick="playClickSound(); switchMode('student')" id="btn-mode-student" class="flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30">
+                <i class="fa-solid fa-graduation-cap"></i> بوابة الطالب الذكية
+            </button>
+            <button onclick="playClickSound(); requestAdminAccess()" id="btn-mode-admin" class="flex-1 bg-black/20 dark:bg-slate-800/40 text-gray-100 dark:text-gray-200 py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-white/10">
+                <i class="fa-solid fa-user-shield"></i> لوحة تحكم المشرف الشاملة
+            </button>
+        </div>
+
+        <!-- حاوية المحتوى الديناميكي -->
+        <div id="main-container"></div>
+
     </div>
 
-</div>
+    <!-- نافذة عرض الكارنيه أو التقارير المنبثقة -->
+    <div id="print-card-area" class="hidden"></div>
 
-<script>
-    // بيانات تجريبية للطلاب مع توليد الكود التعريفي التلقائي بصيغة YOSSR
-    let students = [
-        { 
-            id: "YOSSR-0001", 
-            name: "محمود إبراهيم الموافي", 
-            statusText: "طلب معلق", 
-            statusClass: "badge-red", 
-            attendance: 12, 
-            absence: 2, 
-            payments: [] 
-        },
-        { 
-            id: "YOSSR-0002", 
-            name: "يوسف أحمد السيد", 
-            statusText: "منتظم (مسدد)", 
-            statusClass: "badge-green", 
-            attendance: 15, 
-            absence: 0, 
-            payments: [
-                {type: "اشتراك شهري", amount: "300", status: "تم الدفع"},
-                {type: "ثمن مذكرة", amount: "75", status: "تم الدفع"}
-            ] 
-        }
-    ];
+    <script>
+        const ADMIN_WHATSAPP = "201015706200";
 
-    function renderStudents() {
-        let tbody = document.getElementById("studentsTableBody");
-        tbody.innerHTML = "";
-        students.forEach((student, index) => {
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${student.id}</strong></td>
-                    <td>${student.name}</td>
-                    <td><span class="${student.statusClass}">${student.statusText}</span></td>
-                    <td><button onclick="openReport(${index})">عرض التقرير الشامل</button></td>
-                </tr>
-            `;
+        let students = JSON.parse(localStorage.getItem('yossr_students')) || [
+            { name: "أحمد محمد علي", code: "YOSS-101", phone: "01012345678", active: true }
+        ];
+
+        let pendingAttendance = JSON.parse(localStorage.getItem('yossr_pending_att')) || [];
+        let approvedAttendance = JSON.parse(localStorage.getItem('yossr_approved_att')) || [];
+        let pendingPayments = JSON.parse(localStorage.getItem('yossr_pending_pay')) || [];
+        let subscriptions = JSON.parse(localStorage.getItem('yossr_subscriptions')) || [];
+        let studentDues = JSON.parse(localStorage.getItem('yossr_student_dues')) || []; 
+        let expenses = JSON.parse(localStorage.getItem('yossr_expenses')) || [];
+        
+        let schedules = JSON.parse(localStorage.getItem('yossr_schedules')) || [
+            { subject: "المحاسبة", days: "السبت والأربعاء", time: "2:00 ظهراً" },
+            { subject: "إدارة الأعمال", days: "الأحد والثلاثاء", time: "4:00 عصراً" }
+        ];
+
+        let isDarkMode = localStorage.getItem('yossr_dark_mode') === 'true';
+        if (isDarkMode) { applyDarkMode(true); }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderStudentView();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentCodeFromURL = urlParams.get('code');
+
+            if (studentCodeFromURL) {
+                const cleanCode = studentCodeFromURL.trim().toUpperCase();
+                setTimeout(() => {
+                    const codeInput = document.getElementById('portal-code-input');
+                    if (codeInput) {
+                        codeInput.value = cleanCode;
+                        loadStudentPortalData();
+                        requestAttendanceAuto(cleanCode);
+                    }
+                }, 300);
+            }
         });
-    }
 
-    function submitPayment() {
-        let type = document.getElementById("paymentType").value;
-        let amount = document.getElementById("amount").value;
-        
-        if(!type || !amount) {
-            alert("برجاء اختيار نوع الدفع وإدخال المبلغ بشكل صحيح.");
-            return;
+        function playClickSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+                osc.stop(ctx.currentTime + 0.05);
+            } catch(e) {}
         }
-        
-        // إضافة الطلب لأول طالب كمثال افتراضي (أو الطالب الحالي)
-        students[0].payments.push({type: type, amount: amount, status: "معلق بانتظار المراجعة"});
-        students[0].statusText = "يوجد طلب جديد";
-        students[0].statusClass = "badge-red";
-        
-        renderStudents();
-        alert("تم إرسال طلب الدفع بنجاح إلى بوابة المشرف!");
-        document.getElementById("paymentForm").reset();
-    }
 
-    function openReport(index) {
-        let student = students[index];
-        document.getElementById("repCode").innerText = student.id;
-        document.getElementById("repName").innerText = student.name;
-        document.getElementById("repAttendance").innerText = student.attendance + " حصة";
-        document.getElementById("repAbsence").innerText = student.absence + " حصة";
-        
-        let payBody = document.getElementById("repPaymentsBody");
-        payBody.innerHTML = "";
-        
-        if(student.payments.length === 0) {
-            payBody.innerHTML = `<tr><td colspan="3">لا توجد طلبات دفع مسجلة لهذا الطالب</td></tr>`;
-            document.getElementById("repFinancialStatus").className = "badge-red";
-            document.getElementById("repFinancialStatus").innerText = "يوجد مبلغ مستحق (غير مسدد)";
-        } else {
-            student.payments.forEach(p => {
-                payBody.innerHTML += `<tr><td>${p.type}</td><td>${p.amount} ج.م</td><td>${p.status}</td></tr>`;
+        function playSuccessSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.3);
+                osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('yossr_dark_mode', isDarkMode);
+            applyDarkMode(isDarkMode);
+        }
+
+        function applyDarkMode(dark) {
+            const card = document.getElementById('main-card');
+            const icon = document.getElementById('theme-icon');
+            if (dark) {
+                card.classList.add('dark');
+                icon.textContent = "☀️";
+            } else {
+                card.classList.remove('dark');
+                icon.textContent = "🌙";
+            }
+        }
+
+        function saveLocal() {
+            localStorage.setItem('yossr_students', JSON.stringify(students));
+            localStorage.setItem('yossr_pending_att', JSON.stringify(pendingAttendance));
+            localStorage.setItem('yossr_approved_att', JSON.stringify(approvedAttendance));
+            localStorage.setItem('yossr_pending_pay', JSON.stringify(pendingPayments));
+            localStorage.setItem('yossr_subscriptions', JSON.stringify(subscriptions));
+            localStorage.setItem('yossr_student_dues', JSON.stringify(studentDues));
+            localStorage.setItem('yossr_expenses', JSON.stringify(expenses));
+            localStorage.setItem('yossr_schedules', JSON.stringify(schedules));
+        }
+
+        function switchMode(mode) {
+            stopStudentQrScanner();
+            const studentBtn = document.getElementById('btn-mode-student');
+            const adminBtn = document.getElementById('btn-mode-admin');
+
+            if (mode === 'student') {
+                studentBtn.className = "flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30";
+                adminBtn.className = "flex-1 bg-black/20 dark:bg-slate-800/40 text-gray-100 dark:text-gray-200 py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-white/10";
+                renderStudentView();
+            } else if (mode === 'admin') {
+                adminBtn.className = "flex-1 bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-blue-400/30";
+                studentBtn.className = "flex-1 bg-black/20 dark:bg-slate-800/40 text-gray-100 dark:text-gray-200 py-3.5 rounded-2xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2 border border-white/10";
+                renderAdminView();
+            }
+        }
+
+        function requestAdminAccess() {
+            const pass = prompt("الرجاء إدخال كلمة مرور المشرف:");
+            if (pass === "23122002YY") {
+                switchMode('admin');
+            } else if (pass !== null) {
+                alert("كلمة المرور غير صحيحة!");
+            }
+        }
+
+        // ================= 1. بوابة الطالب الذكية =================
+        function renderStudentView() {
+            const container = document.getElementById('main-container');
+            const todayName = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            let scheduleHtml = '';
+            let marqueeText = "أهلاً بك يا بطل في نظام مستر يسر الموافي للمحاسبة وإدارة الأعمال! 📚✨ | ";
+            
+            if (schedules.length === 0) {
+                scheduleHtml = `<p class="text-gray-400">لا توجد مواعيد مضافة حالياً.</p>`;
+                marqueeText += "تابع جدول المواعيد بانتظام.";
+            } else {
+                schedules.forEach(sch => {
+                    scheduleHtml += `<p>• <b>${sch.subject}:</b> ${sch.days} (${sch.time})</p>`;
+                    marqueeText += `موعد حصة ${sch.subject}: ${sch.days} الساعة ${sch.time} ⏱️ | `;
+                });
+            }
+
+            container.innerHTML = `
+                <div class="space-y-6 text-right max-w-xl mx-auto">
+                    <!-- الشريط المتحرك للتنبيهات التلقائية -->
+                    <div class="bg-blue-950/70 border border-blue-500/40 rounded-2xl overflow-hidden py-2 px-3 shadow-sm backdrop-blur-sm">
+                        <marquee behavior="scroll" direction="right" scrollamount="4" class="text-xs font-bold text-blue-200">
+                            <i class="fa-solid fa-bullhorn text-amber-400 ml-1"></i> ${marqueeText}
+                        </marquee>
+                    </div>
+
+                    <div class="bg-black/20 dark:bg-slate-900/40 p-4 rounded-2xl border border-white/20 dark:border-slate-700/50 flex justify-between items-center text-xs shadow-sm backdrop-blur-sm">
+                        <span class="font-bold text-white"><i class="fa-solid fa-calendar-day ml-1"></i> ${todayName}</span>
+                        <span class="font-bold text-blue-300">مرحباً بك في بوابة التفوق والتميز</span>
+                    </div>
+
+                    <div class="bg-black/25 dark:bg-slate-900/50 p-5 rounded-2xl border border-white/20 dark:border-slate-700/60 space-y-3 shadow-inner backdrop-blur-sm">
+                        <label class="block font-bold text-xs text-white">أدخل كودك الشخصي أو امسح كارت الحضور:</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="portal-code-input" placeholder="مثال: YOSS-101" class="flex-1 px-4 py-2.5 border rounded-xl text-xs uppercase font-mono font-bold bg-black/30 dark:bg-slate-950/70 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            <button onclick="playClickSound(); loadStudentPortalData()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow border border-blue-400/30">استعلام</button>
+                        </div>
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="playClickSound(); startStudentQrScanner()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-emerald-400/30">
+                                <i class="fa-solid fa-qrcode"></i> مسح كود الكارنيه (QR) بالكاميرا
+                            </button>
+                            <button onclick="playClickSound(); stopStudentQrScanner()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">إغلاق</button>
+                        </div>
+                        <div id="student-qr-reader" class="w-full max-w-xs mx-auto bg-black rounded-xl overflow-hidden"></div>
+                    </div>
+
+                    <div id="student-portal-details" class="hidden space-y-4">
+                        <div id="portal-financial-alert-banner"></div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-black/20 dark:bg-slate-950/40 p-4 rounded-2xl border border-white/20 dark:border-slate-700 shadow-sm backdrop-blur-sm">
+                                <span class="text-[11px] text-gray-300 block mb-1">المدفوعات المسجلة:</span>
+                                <div id="portal-fin-badge"></div>
+                            </div>
+                            <div class="bg-black/20 dark:bg-slate-950/40 p-4 rounded-2xl border border-white/20 dark:border-slate-700 shadow-sm backdrop-blur-sm">
+                                <span class="text-[11px] text-gray-300 block mb-1">حصص الحضور المعتمدة:</span>
+                                <span id="portal-att-count" class="font-black text-base text-blue-300">0 حصة</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-950/40 dark:bg-slate-900/60 p-4 rounded-2xl border border-emerald-500/30 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                            <h3 class="font-bold text-xs text-emerald-300">تسجيل حضور حصة اليوم:</h3>
+                            <button onclick="playClickSound(); requestAttendanceApproval()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-emerald-400/30">
+                                <i class="fa-solid fa-check-circle"></i> إرسال طلب تسجيل الحضور للمشرف
+                            </button>
+                            <div id="attendance-alert-box"></div>
+                        </div>
+
+                        <div class="bg-indigo-950/40 dark:bg-slate-900/60 p-4 rounded-2xl border border-indigo-500/30 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                            <h3 class="font-bold text-xs text-indigo-300">إرسال طلب سداد مصروفات أو مذكرة:</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                <select id="pay-subject" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white border-white/30 dark:border-slate-700">
+                                    <option value="المحاسبة" class="text-black">المحاسبة</option>
+                                    <option value="إدارة الأعمال" class="text-black">إدارة الأعمال</option>
+                                </select>
+                                <select id="pay-month" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white border-white/30 dark:border-slate-700">
+                                    <option value="سبتمبر" class="text-black">سبتمبر</option><option value="أكتوبر" class="text-black">أكتوبر</option><option value="نوفمبر" class="text-black">نوفمبر</option><option value="ديسمبر" class="text-black">ديسمبر</option><option value="يناير" class="text-black">يناير</option><option value="فبراير" class="text-black">فبراير</option><option value="مارس" class="text-black">مارس</option><option value="أبريل" class="text-black">أبريل</option><option value="مايو" class="text-black">مايو</option><option value="يونيو" class="text-black">يونيو</option><option value="يوليو" class="text-black">يوليو</option><option value="أغسطس" class="text-black">أغسطس</option>
+                                </select>
+                                <input type="number" id="pay-amount" placeholder="المبلغ (ج)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            </div>
+                            <button onclick="playClickSound(); requestPaymentApproval()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-2 border border-indigo-400/30">
+                                <i class="fa-solid fa-paper-plane"></i> إرسال طلب السداد للمشرف (قيد المراجعة)
+                            </button>
+                            <div id="payment-alert-box"></div>
+                        </div>
+
+                        <div class="bg-amber-950/40 dark:bg-slate-900/60 p-4 rounded-2xl border border-amber-500/30 dark:border-slate-700 space-y-2 backdrop-blur-sm">
+                            <h4 class="font-bold text-xs text-amber-300"><i class="fa-solid fa-clock ml-1"></i> متابعة طلباتك المعلقة:</h4>
+                            <div id="student-pending-status-box" class="text-[11px] text-gray-200 space-y-1">
+                                جاري التحقق من الطلبات...
+                            </div>
+                        </div>
+
+                        <div class="bg-black/20 dark:bg-slate-900/60 p-4 rounded-2xl border border-white/20 dark:border-slate-700 space-y-2 backdrop-blur-sm">
+                            <h4 class="font-bold text-xs text-white"><i class="fa-solid fa-calendar-days ml-1"></i> جدول مواعيد المجموعات الثابت:</h4>
+                            <div class="text-[11px] text-gray-200 space-y-1">
+                                ${scheduleHtml}
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="playClickSound(); copyStudentCode()" class="flex-1 bg-slate-800/80 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-white/20">
+                                <i class="fa-solid fa-copy"></i> نسخ الكود
+                            </button>
+                            <button onclick="playClickSound(); openStudentCard()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-sky-400/30">
+                                <i class="fa-solid fa-id-card"></i> عرض كارت الحضور والـ QR
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <a href="https://chat.whatsapp.com/CHQTsKqmsRSK0jJqkHU4Ou" target="_blank" onclick="playClickSound()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-emerald-400/30">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> الانضمام لجروب الواتساب (المحاسبة وإدارة الأعمال)[cite: 1]
+                            </a>
+                            <a id="direct-wa-support" href="#" target="_blank" onclick="playClickSound()" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow transition border border-slate-500/30">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> تواصل مباشر مع الإدارة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let studentHtml5QrCode = null;
+        function startStudentQrScanner() {
+            if (!studentHtml5QrCode) { studentHtml5QrCode = new Html5Qrcode("student-qr-reader"); }
+            studentHtml5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 200 },
+                (decodedText) => {
+                    const rawCode = decodedText.trim();
+                    const parts = rawCode.split('/');
+                    const cleanCode = parts[parts.length - 1].replace('?code=', '').trim().toUpperCase();
+
+                    let student = students.find(s => s.code.toUpperCase() === cleanCode);
+                    if (!student) {
+                        student = { name: "طالب مسجل بالكاميرا (" + cleanCode + ")", code: cleanCode, phone: "غير محدد", active: true };
+                        students.push(student);
+                        saveLocal();
+                    }
+
+                    playSuccessSound();
+                    document.getElementById('portal-code-input').value = student.code;
+                    stopStudentQrScanner();
+                    loadStudentPortalData();
+                },
+                (err) => {}
+            ).catch(err => alert("تأكد من إذن استخدام الكاميرا."));
+        }
+
+        function stopStudentQrScanner() {
+            if (studentHtml5QrCode) { studentHtml5QrCode.stop().catch(err => {}); }
+        }
+
+        function loadStudentPortalData() {
+            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            if (!code) { alert("أدخل كود الطالب أو امسح الكارنيه أولاً!"); return; }
+            let student = students.find(s => s.code.toUpperCase() === code);
+            
+            if (!student) {
+                student = { name: "طالب مسجل (" + code + ")", code: code, phone: "غير محدد", active: true };
+                students.push(student);
+                saveLocal();
+            }
+
+            document.getElementById('student-portal-details').classList.remove('hidden');
+
+            let mySubs = subscriptions.filter(s => s.code.toUpperCase() === student.code.toUpperCase());
+            let totalPaid = 0;
+            mySubs.forEach(s => totalPaid += s.amount);
+
+            let myDues = studentDues.filter(d => d.code.toUpperCase() === student.code.toUpperCase() || d.code === "ALL");
+            let totalDue = 0;
+            myDues.forEach(d => totalDue += d.amount);
+
+            let remainingDue = totalDue - totalPaid;
+            const alertBanner = document.getElementById('portal-financial-alert-banner');
+
+            if (remainingDue > 0) {
+                alertBanner.innerHTML = `
+                    <div class="bg-rose-950/60 border border-rose-500/40 p-3.5 rounded-2xl flex items-center justify-between text-xs shadow-sm backdrop-blur-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i>
+                            <div>
+                                <span class="font-bold text-rose-200 block">تنبيه مالي مهم:</span>
+                                <span class="text-rose-300">عليك مصروفات مستحقة بقيمة <b class="font-black underline">${remainingDue} ج.م</b>، يرجى سرعة سدادها.</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                alertBanner.innerHTML = `
+                    <div class="bg-emerald-950/60 border border-emerald-500/40 p-3.5 rounded-2xl flex items-center justify-between text-xs shadow-sm backdrop-blur-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+                            <span class="font-bold text-emerald-200">حسابك ماليًا مستقر ولا توجد مصروفات متأخرة عليك حالياً.</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const badgeBox = document.getElementById('portal-fin-badge');
+            badgeBox.innerHTML = `<span class="bg-emerald-900/80 text-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold border border-emerald-500/30">إجمالي المدفوع (${totalPaid}ج)</span>`;
+
+            let myAtt = approvedAttendance.filter(a => a.code.toUpperCase() === student.code.toUpperCase());
+            document.getElementById('portal-att-count').innerText = `${myAtt.length} حصة`;
+
+            updateStudentPendingView(student.code);
+
+            const supMsg = encodeURIComponent(`السلام عليكم مستر يسر، أنا الطالب/ة ${student.name} (كود: ${student.code}) وعندي استفسار بخصوص الحصص أو المصروفات.`);
+            document.getElementById('direct-wa-support').href = `https://wa.me/${ADMIN_WHATSAPP}?text=${supMsg}`;
+        }
+
+        function updateStudentPendingView(code) {
+            const box = document.getElementById('student-pending-status-box');
+            if(!box) return;
+            let pendingAttObj = pendingAttendance.find(a => a.code.toUpperCase() === code.toUpperCase());
+            let pendingPayList = pendingPayments.filter(p => p.code.toUpperCase() === code.toUpperCase());
+
+            let html = "";
+            if (pendingAttObj) {
+                html += `<p class="text-amber-300 font-bold">• طلب تسجيل الحضور: <b>قيد المراجعة ⏳</b></p>`;
+            } else {
+                html += `<p class="text-gray-300">• لا يوجد طلب حضور معلق اليوم.</p>`;
+            }
+
+            if (pendingPayList.length > 0) {
+                pendingPayList.forEach(p => {
+                    html += `<p class="text-indigo-300 font-bold">• طلب دفع (${p.subject} - ${p.month} بمبلغ ${p.amount}ج): <b>قيد المراجعة ⏳</b></p>`;
+                });
+            } else {
+                html += `<p class="text-gray-300">• لا توجد طلبات دفع معلقة.</p>`;
+            }
+            box.innerHTML = html;
+        }
+
+        function requestAttendanceAuto(code) {
+            let student = students.find(s => s.code.toUpperCase() === code);
+            if (!student) {
+                student = { name: "طالب بالكارت (" + code + ")", code: code, phone: "غير محدد", active: true };
+                students.push(student);
+                saveLocal();
+            }
+
+            const todayStr = new Date().toLocaleDateString('ar-EG');
+            const alreadyAttended = approvedAttendance.some(a => a.code.toUpperCase() === student.code.toUpperCase() && a.date.includes(todayStr));
+            const alreadyPending = pendingAttendance.some(a => a.code.toUpperCase() === student.code.toUpperCase());
+            const alertBox = document.getElementById('attendance-alert-box');
+
+            if (alreadyAttended) {
+                if(alertBox) alertBox.innerHTML = `<div class="p-2.5 bg-blue-900/85 text-blue-200 rounded-xl text-xs font-bold text-center">ℹ️ أهلاً بك يا ${student.name}، لقد تم تسجيل حضورك مسبقاً اليوم.</div>`;
+                return;
+            }
+            if (alreadyPending) {
+                if(alertBox) alertBox.innerHTML = `<div class="p-2.5 bg-amber-900/85 text-amber-200 rounded-xl text-xs font-bold text-center">⏳ أهلاً بك يا ${student.name}، طلب حضورك مسجل وهو قيد المراجعة لدى المشرف.</div>`;
+                return;
+            }
+
+            pendingAttendance.push({ name: student.name, code: student.code, date: new Date().toLocaleString('ar-EG') });
+            saveLocal();
+            
+            if(alertBox) {
+                alertBox.innerHTML = `<div class="p-2.5 bg-emerald-950 text-emerald-200 border border-emerald-500 rounded-xl text-xs font-bold text-center">🎉 تم رصد كارت الطالب (${student.name}) وإرسال طلب تسجيل الحضور بنجاح!</div>`;
+            }
+            playSuccessSound();
+            updateStudentPendingView(student.code);
+        }
+
+        function requestAttendanceApproval() {
+            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            if(!code) { alert("أدخل كود الطالب أولاً!"); return; }
+            requestAttendanceAuto(code);
+        }
+
+        function requestPaymentApproval() {
+            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            const subject = document.getElementById('pay-subject').value;
+            const month = document.getElementById('pay-month').value;
+            const amount = parseFloat(document.getElementById('pay-amount').value) || 0;
+            const alertBox = document.getElementById('payment-alert-box');
+
+            if (amount <= 0) { alert("أدخل مبلغ صحيح!"); return; }
+            let student = students.find(s => s.code.toUpperCase() === code);
+            if (!student) {
+                student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
+                students.push(student);
+                saveLocal();
+            }
+
+            pendingPayments.push({ name: student.name, code: student.code, subject, month, amount, date: new Date().toLocaleString('ar-EG') });
+            saveLocal();
+
+            alertBox.innerHTML = `<div class="p-2.5 bg-indigo-900/80 text-indigo-200 rounded-xl text-xs font-bold">⏳ تم إرسال طلب السداد للمشرف وهو (قيد المراجعة).</div>`;
+            updateStudentPendingView(student.code);
+        }
+
+        function copyStudentCode() {
+            const code = document.getElementById('portal-code-input').value.trim();
+            navigator.clipboard.writeText(code).then(() => alert("تم نسخ الكود بنجاح: " + code));
+        }
+
+        function openStudentCard() {
+            const code = document.getElementById('portal-code-input').value.trim().toUpperCase();
+            let student = students.find(s => s.code.toUpperCase() === code);
+            if (!student) {
+                student = { name: "طالب جديد", code: code, phone: "غير محدد", active: true };
+            }
+            showStudentCardModal(student.name, student.code);
+        }
+
+        function showStudentCardModal(name, code) {
+            const area = document.getElementById('print-card-area');
+            area.className = "fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm";
+            area.innerHTML = `
+                <div class="bg-slate-900 border border-slate-700 p-6 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-2xl text-white">
+                    <h3 class="text-lg font-black text-blue-400">كارنيه طالب معتمد</h3>
+                    <div id="qr-card-preview" class="bg-white p-4 rounded-2xl w-48 h-48 mx-auto flex items-center justify-center"></div>
+                    <div>
+                        <p class="font-bold text-base">${name}</p>
+                        <p class="text-xs font-mono text-gray-400 mt-1">${code}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="downloadStudentCard()" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2.5 rounded-xl text-xs font-bold transition">تحميل الكارنيه</button>
+                        <button onclick="closeModal()" class="flex-1 bg-slate-700 hover:bg-slate-800 py-2.5 rounded-xl text-xs font-bold transition">إغلاق</button>
+                    </div>
+                </div>
+            `;
+            new QRCode(document.getElementById("qr-card-preview"), {
+                text: window.location.origin + window.location.pathname + "?code=" + code,
+                width: 160,
+                height: 160
             });
-            document.getElementById("repFinancialStatus").className = "badge-green";
-            document.getElementById("repFinancialStatus").innerText = "مخلص (لا توجد متأخرات مالية)";
         }
-        
-        // إظهار قسم التقرير للقراءة والتصفح
-        let reportSec = document.getElementById("reportSection");
-        reportSec.classList.remove("hidden");
-        reportSec.scrollIntoView({ behavior: 'smooth' });
-    }
 
-    function closeReport() {
-        document.getElementById("reportSection").classList.add("hidden");
-    }
+        function downloadStudentCard() {
+            html2canvas(document.querySelector('#qr-card-preview').parentNode).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Student_Card.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
 
-    // تشغيل النظام وعرض الجدول عند فتح الصفحة
-    renderStudents();
-</script>
+        function closeModal() {
+            document.getElementById('print-card-area').className = "hidden";
+            document.getElementById('print-card-area').innerHTML = "";
+        }
 
+        // ================= 2. لوحة تحكم المشرف الشاملة =================
+        function renderAdminView() {
+            const container = document.getElementById('main-container');
+
+            let studentOptionsHtml = `<option value="ALL" class="text-black">📢 فرض على جميع الطلاب (عام)</option>`;
+            students.forEach(st => {
+                studentOptionsHtml += `<option value="${st.code}" class="text-black">${st.name} (${st.code})</option>`;
+            });
+
+            container.innerHTML = `
+                <div class="space-y-6 text-right">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 shadow-sm text-center backdrop-blur-sm">
+                            <span class="text-xs text-gray-300 block mb-1">إجمالي الطلاب</span>
+                            <span class="text-xl font-black text-blue-300">${students.length}</span>
+                        </div>
+                        <div class="bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 shadow-sm text-center backdrop-blur-sm">
+                            <span class="text-xs text-gray-300 block mb-1">طلبات الحضور المعلقة</span>
+                            <span class="text-xl font-black text-amber-300">${pendingAttendance.length}</span>
+                        </div>
+                        <div class="bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 shadow-sm text-center backdrop-blur-sm">
+                            <span class="text-xs text-gray-300 block mb-1">طلبات الدفع المعلقة</span>
+                            <span class="text-xl font-black text-indigo-300">${pendingPayments.length}</span>
+                        </div>
+                        <div class="bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 shadow-sm text-center backdrop-blur-sm">
+                            <span class="text-xs text-gray-300 block mb-1">إجمالي الإيرادات</span>
+                            <span class="text-xl font-black text-emerald-300">${subscriptions.reduce((sum, s)=>sum+s.amount, 0)} ج</span>
+                        </div>
+                    </div>
+
+                    <!-- إدارة ومراجعة الحضور -->
+                    <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                        <h3 class="font-bold text-sm text-amber-300"><i class="fa-solid fa-clipboard-user ml-1"></i> مراجعة واعتماد طلبات الحضور المعلقة (${pendingAttendance.length}):</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-right border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/20 text-gray-300">
+                                        <th class="p-2.5">اسم الطالب</th>
+                                        <th class="p-2.5">الكود</th>
+                                        <th class="p-2.5">وقت الطلب</th>
+                                        <th class="p-2.5 text-center">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/10">
+                                    ${pendingAttendance.length === 0 ? `<tr><td colspan="4" class="p-3 text-center text-gray-400">لا توجد طلبات حضور معلقة حالياً.</td></tr>` : 
+                                        pendingAttendance.map((item, idx) => `
+                                            <tr class="hover:bg-white/5">
+                                                <td class="p-2.5 font-bold">${item.name}</td>
+                                                <td class="p-2.5 font-mono">${item.code}</td>
+                                                <td class="p-2.5 text-gray-300">${item.date}</td>
+                                                <td class="p-2.5 text-center flex justify-center gap-1.5">
+                                                    <button onclick="playClickSound(); approveAttendance(${idx})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-bold transition">قبول</button>
+                                                    <button onclick="playClickSound(); rejectAttendance(${idx})" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg font-bold transition">رفض</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- إدارة ومراجعة طلبات السداد -->
+                    <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                        <h3 class="font-bold text-sm text-indigo-300"><i class="fa-solid fa-file-invoice-dollar ml-1"></i> مراجعة طلبات السداد والدفع المعلقة (${pendingPayments.length}):</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-right border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/20 text-gray-300">
+                                        <th class="p-2.5">اسم الطالب</th>
+                                        <th class="p-2.5">المادة</th>
+                                        <th class="p-2.5">الشهر</th>
+                                        <th class="p-2.5">المبلغ</th>
+                                        <th class="p-2.5 text-center">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/10">
+                                    ${pendingPayments.length === 0 ? `<tr><td colspan="5" class="p-3 text-center text-gray-400">لا توجد طلبات سداد معلقة حالياً.</td></tr>` : 
+                                        pendingPayments.map((item, idx) => `
+                                            <tr class="hover:bg-white/5">
+                                                <td class="p-2.5 font-bold">${item.name} (${item.code})</td>
+                                                <td class="p-2.5">${item.subject}</td>
+                                                <td class="p-2.5">${item.month}</td>
+                                                <td class="p-2.5 font-bold text-emerald-400">${item.amount} ج</td>
+                                                <td class="p-2.5 text-center flex justify-center gap-1.5">
+                                                    <button onclick="playClickSound(); approvePayment(${idx})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-bold transition">قبول وإضافة للخزينة</button>
+                                                    <button onclick="playClickSound(); rejectPayment(${idx})" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg font-bold transition">رفض</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- إضافة مصروفات مستحقة على الطلاب -->
+                    <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                        <h3 class="font-bold text-sm text-rose-300"><i class="fa-solid fa-bullhorn ml-1"></i> فرض مصروفات أو رسوم جديدة على الطلاب:</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <select id="due-student-select" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white border-white/30 dark:border-slate-700">
+                                ${studentOptionsHtml}
+                            </select>
+                            <input type="text" id="due-title" placeholder="بيان المصروفات (مثال: مذكرة المحاسبة لشهر أكتوبر)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                            <input type="number" id="due-amount" placeholder="المبلغ المطلوب (ج)" class="px-3 py-2.5 border rounded-xl text-xs bg-black/30 dark:bg-slate-950 text-white placeholder-gray-300 border-white/30 dark:border-slate-700">
+                        </div>
+                        <button onclick="playClickSound(); addNewStudentDue()" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition border border-rose-400/30">
+                            إرسال المطالبة المالية للطالب/الطلاب
+                        </button>
+                    </div>
+
+                    <!-- إدارة شؤون الطلاب -->
+                    <div class="bg-black/20 dark:bg-slate-900/60 p-5 rounded-2xl border border-white/20 dark:border-slate-700 space-y-3 backdrop-blur-sm">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-sm text-blue-300"><i class="fa-solid fa-users ml-1"></i> سجل الطلاب المسجلين (${students.length}):</h3>
+                            <button onclick="playClickSound(); addNewStudentPrompt()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition">إضافة طالب جديد</button>
+                        </div>
+                        <div class="overflow-x-auto max-h-60 overflow-y-auto">
+                            <table class="w-full text-xs text-right border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/20 text-gray-300 sticky top-0 bg-slate-900/90 backdrop-blur">
+                                        <th class="p-2.5">اسم الطالب</th>
+                                        <th class="p-2.5">الكود</th>
+                                        <th class="p-2.5">الهاتف</th>
+                                        <th class="p-2.5 text-center">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/10">
+                                    ${students.map((st, index) => `
+                                        <tr class="hover:bg-white/5">
+                                            <td class="p-2.5 font-bold">${st.name}</td>
+                                            <td class="p-2.5 font-mono">${st.code}</td>
+                                            <td class="p-2.5">${st.phone}</td>
+                                            <td class="p-2.5 text-center flex justify-center gap-1.5">
+                                                <button onclick="playClickSound(); showStudentCardModal('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded-lg transition" title="عرض الكارنيه"><i class="fa-solid fa-id-card"></i></button>
+                                                <button onclick="playClickSound(); deleteStudent(${index})" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-lg transition" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function approveAttendance(idx) {
+            let item = pendingAttendance.splice(idx, 1)[0];
+            approvedAttendance.push({ name: item.name, code: item.code, date: new Date().toLocaleString('ar-EG') });
+            saveLocal();
+            renderAdminView();
+        }
+
+        function rejectAttendance(idx) {
+            pendingAttendance.splice(idx, 1);
+            saveLocal();
+            renderAdminView();
+        }
+
+        function approvePayment(idx) {
+            let item = pendingPayments.splice(idx, 1)[0];
+            subscriptions.push({ name: item.name, code: item.code, subject: item.subject, month: item.month, amount: item.amount, date: new Date().toLocaleString('ar-EG') });
+            saveLocal();
+            renderAdminView();
+        }
+
+        function rejectPayment(idx) {
+            pendingPayments.splice(idx, 1);
+            saveLocal();
+            renderAdminView();
+        }
+
+        function addNewStudentDue() {
+            const code = document.getElementById('due-student-select').value;
+            const title = document.getElementById('due-title').value.trim();
+            const amount = parseFloat(document.getElementById('due-amount').value) || 0;
+
+            if (!title || amount <= 0) { alert("أدخل بيانات المطالبة بشكل صحيح!"); return; }
+            studentDues.push({ code, title, amount, date: new Date().toLocaleDateString('ar-EG') });
+            saveLocal();
+            alert("تم إرسال المطالبة المالية بنجاح!");
+            document.getElementById('due-title').value = "";
+            document.getElementById('due-amount').value = "";
+        }
+
+        function addNewStudentPrompt() {
+            const name = prompt("أدخل اسم الطالب الرباعي:");
+            if (!name) return;
+            const phone = prompt("أدخل رقم هاتف الطالب:") || "غير محدد";
+            const randomCode = "YOSS-" + Math.floor(100 + Math.random() * 900);
+
+            students.push({ name, code: randomCode, phone, active: true });
+            saveLocal();
+            renderAdminView();
+            alert("تم إضافة الطالب بنجاح برمز تعريف: " + randomCode);
+        }
+
+        function deleteStudent(index) {
+            if (confirm("هل أنت متأكد من حذف هذا الطالب؟")) {
+                students.splice(index, 1);
+                saveLocal();
+                renderAdminView();
+            }
+        }
+    </script>
 </body>
 </html>
