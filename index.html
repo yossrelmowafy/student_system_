@@ -10,7 +10,6 @@
     </script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- مكتبة html2canvas لتحويل الكارت لصورة وتحميلها -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -96,7 +95,6 @@
             }
         });
 
-        // صوت نقرة خفيف عند الضغط على الأزرار
         function playClickSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -188,12 +186,27 @@
             const todayName = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
             let scheduleHtml = '';
-            schedules.forEach(sch => {
-                scheduleHtml += `<p>• ${sch.subject}: ${sch.days} (${sch.time})</p>`;
-            });
+            let marqueeText = "أهلاً بك يا بطل في نظام مستر يسر الموافي للمحاسبة وإدارة الأعمال! 📚✨ | ";
+            
+            if (schedules.length === 0) {
+                scheduleHtml = `<p class="text-gray-400">لا توجد مواعيد مضافة حالياً.</p>`;
+                marqueeText += "تابع جدول المواعيد بانتظام.";
+            } else {
+                schedules.forEach(sch => {
+                    scheduleHtml += `<p>• <b>${sch.subject}:</b> ${sch.days} (${sch.time})</p>`;
+                    marqueeText += `موعد حصة ${sch.subject}: ${sch.days} الساعة ${sch.time} ⏱️ | `;
+                });
+            }
 
             container.innerHTML = `
                 <div class="space-y-6 text-right max-w-xl mx-auto">
+                    <!-- الشريط المتحرك للتنبيهات التلقائية -->
+                    <div class="bg-blue-950/70 border border-blue-500/40 rounded-2xl overflow-hidden py-2 px-3 shadow-sm backdrop-blur-sm">
+                        <marquee behavior="scroll" direction="right" scrollamount="4" class="text-xs font-bold text-blue-200">
+                            <i class="fa-solid fa-bullhorn text-amber-400 ml-1"></i> ${marqueeText}
+                        </marquee>
+                    </div>
+
                     <div class="bg-black/20 dark:bg-slate-900/40 p-4 rounded-2xl border border-white/20 dark:border-slate-700/50 flex justify-between items-center text-xs shadow-sm backdrop-blur-sm">
                         <span class="font-bold text-white"><i class="fa-solid fa-calendar-day ml-1"></i> ${todayName}</span>
                         <span class="font-bold text-blue-300">مرحباً بك في بوابة التفوق والتميز</span>
@@ -509,16 +522,19 @@
                     </div>
 
                     <div class="flex flex-wrap gap-2 justify-between items-center bg-black/20 dark:bg-slate-900/50 p-4 rounded-2xl border border-white/20 dark:border-slate-700 backdrop-blur-sm">
-                        <div class="flex gap-2">
+                        <div class="flex flex-wrap gap-2">
                             <button onclick="playClickSound(); exportFinancialReport()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-sky-400/30">
-                                <i class="fa-solid fa-file-excel"></i> تصدير وطباعة التقرير المالي
+                                <i class="fa-solid fa-file-excel"></i> التقرير المالي
                             </button>
                             <button onclick="playClickSound(); exportStudentsReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-blue-400/30">
-                                <i class="fa-solid fa-users-rectangle"></i> تقرير الطلاب الكلي
+                                <i class="fa-solid fa-users-rectangle"></i> تقرير الطلاب
+                            </button>
+                            <button onclick="playClickSound(); showAttendanceArchiveModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-emerald-400/30">
+                                <i class="fa-solid fa-clock-rotate-left"></i> أرشيف وتاريخ الحضور 📋
                             </button>
                         </div>
                         <button onclick="playClickSound(); resetSystemData()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-rose-400/30">
-                            <i class="fa-solid fa-triangle-exclamation"></i> تصفير جميع البيانات
+                            <i class="fa-solid fa-triangle-exclamation"></i> تصفير البيانات
                         </button>
                     </div>
 
@@ -823,8 +839,10 @@
                 let waBtn = '';
                 if (st.phone && st.phone !== "غير محدد") {
                     let cleanPhone = st.phone.startsWith('0') ? '2' + st.phone : st.phone;
-                    let msg = encodeURIComponent(`أهلاً بك يا ${st.name} من مستر يسر الموافي (نظام المحاسبة وإدارة الأعمال).`);
-                    waBtn = `<a href="https://wa.me/${cleanPhone}?text=${msg}" target="_blank" onclick="playClickSound()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1" title="مراسلة واتساب"><i class="fa-brands fa-whatsapp"></i> واتس</a>`;
+                    const currentBaseUrl = window.location.href.split('?')[0];
+                    let cardLink = `${currentBaseUrl}?code=${st.code}`;
+                    let msg = encodeURIComponent(`أهلاً بك يا ${st.name} من مستر يسر الموافي (نظام المحاسبة وإدارة الأعمال). 📚✨\n\nكود الطالب الخاص بك هو: ${st.code}\nرابط كارنيه الحضور الشخصي:\n${cardLink}`);
+                    waBtn = `<a href="https://wa.me/${cleanPhone}?text=${msg}" target="_blank" onclick="playClickSound()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 shadow" title="إرسال الكارت ورابط الواتس فوراً"><i class="fa-brands fa-whatsapp"></i> الكارت للواتس 📲</a>`;
                 }
 
                 html += `
@@ -839,8 +857,8 @@
                         </td>
                         <td class="p-2.5 text-center space-x-1 space-x-reverse">
                             ${waBtn}
-                            <button onclick="playClickSound(); showStudentCardModal('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="عرض وكارنيه QR"><i class="fa-solid fa-id-card"></i></button>
-                            <button onclick="playClickSound(); editStudent('${st.code}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تعديل البيانات"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="playClickSound(); showStudentCardModal('${st.name}', '${st.code}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="عرض الكارنيه والـ QR"><i class="fa-solid fa-id-card"></i></button>
+                            <button onclick="playClickSound(); editStudent('${st.code}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تعديل"><i class="fa-solid fa-pen"></i></button>
                             <button onclick="playClickSound(); toggleStudentStatus('${st.code}')" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="تبديل الحالة">تبديل</button>
                             <button onclick="playClickSound(); deleteStudent('${st.code}')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold" title="حذف"><i class="fa-solid fa-trash"></i></button>
                         </td>
@@ -877,6 +895,57 @@
                 saveLocal();
                 renderAdminStudentsTable();
             }
+        }
+
+        // أرشيف وتقارير الحضور السابقة
+        function showAttendanceArchiveModal() {
+            let modalBg = document.createElement('div');
+            modalBg.id = "archive-modal-bg";
+            modalBg.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;";
+
+            let rows = "";
+            if (approvedAttendance.length === 0) {
+                rows = `<tr><td colspan="3" style="padding: 15px; text-align: center; color: #777;">لا توجد سجلات حضور مسجلة حتى الآن.</td></tr>`;
+            } else {
+                approvedAttendance.slice().reverse().forEach((item, idx) => {
+                    rows += `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 10px; font-weight: bold;">${item.name}</td>
+                            <td style="padding: 10px; font-family: monospace; color: #2563eb;">${item.code}</td>
+                            <td style="padding: 10px; color: #555;">${item.date}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            modalBg.innerHTML = `
+                <div style="background: #0f172a; padding: 25px; border-radius: 24px; text-align: right; border: 2px solid #3b82f6; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="color: #60a5fa; margin: 0; font-size: 18px; font-weight: bold;"><i class="fa-solid fa-clock-rotate-left ml-1"></i> أرشيف وسجل حضور الطلاب السابق</h3>
+                        <button onclick="closeArchiveModal()" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">إغلاق</button>
+                    </div>
+                    <p style="font-size: 11px; color: #94a3b8; margin-bottom: 15px;">إجمالي الحصص المعتمدة والمسجلة في الأرشيف: ${approvedAttendance.length}</p>
+                    
+                    <div style="background: white; border-radius: 12px; overflow: hidden; color: #000;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #f1f5f9; color: #1e293b;">
+                                    <th style="padding: 10px;">اسم الطالب</th>
+                                    <th style="padding: 10px;">الكود</th>
+                                    <th style="padding: 10px;">تاريخ ووقت الحضور</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modalBg);
+        }
+
+        function closeArchiveModal() {
+            const modal = document.getElementById('archive-modal-bg');
+            if (modal) modal.remove();
         }
 
         function exportFinancialReport() {
@@ -968,12 +1037,10 @@
             }
         }
 
-        // عرض الكارت مع إمكانية التحميل المباشر لصورة (بدون إجبار طباعة)
         function showStudentCardModal(name, code) {
             const currentBaseUrl = window.location.href.split('?')[0];
             const studentQrUrl = `${currentBaseUrl}?code=${code}`;
 
-            // إنشاء نافذة منبثقة عائمة لعرض الكارت وزر التحميل
             let modalBg = document.createElement('div');
             modalBg.id = "card-modal-bg";
             modalBg.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;";
@@ -1012,7 +1079,6 @@
             if (modal) modal.remove();
         }
 
-        // دالة تحميل الكارت كصورة PNG مباشرة بدون الحاجة لطباعة إجبارية
         function downloadCardImage(code) {
             const cardElement = document.getElementById('capture-card-box');
             html2canvas(cardElement, { scale: 2 }).then(canvas => {
